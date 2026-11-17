@@ -23,6 +23,14 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @EntityGraph(attributePaths = {"items", "items.product", "voucher", "user"})
     List<Order> findAllDetailedByIdIn(List<Long> ids);
 
+    @Query("""
+            SELECT o.id FROM Order o
+            WHERE o.status = com.portfolio.flashsale.order.domain.OrderStatus.PENDING_PAYMENT
+              AND o.expiresAt <= :now
+            ORDER BY o.expiresAt ASC, o.id ASC
+            """)
+    List<Long> findExpiredPendingOrderIds(@Param("now") Instant now, Pageable pageable);
+
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("""
             UPDATE Order o
@@ -45,4 +53,15 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
               AND o.status = com.portfolio.flashsale.order.domain.OrderStatus.PENDING_PAYMENT
             """)
     int markCancelledIfPending(@Param("orderId") Long orderId, @Param("now") Instant now);
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("""
+            UPDATE Order o
+            SET o.status = com.portfolio.flashsale.order.domain.OrderStatus.EXPIRED,
+                o.updatedAt = :now
+            WHERE o.id = :orderId
+              AND o.status = com.portfolio.flashsale.order.domain.OrderStatus.PENDING_PAYMENT
+              AND o.expiresAt <= :now
+            """)
+    int markExpiredIfPendingAndPastDeadline(@Param("orderId") Long orderId, @Param("now") Instant now);
 }
