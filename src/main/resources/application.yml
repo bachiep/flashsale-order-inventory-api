@@ -1,0 +1,44 @@
+server:
+  port: ${SERVER_PORT:8101}
+
+spring:
+  application:
+    name: flashsale-order-inventory-api
+  profiles:
+    default: dev
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:dev-only-change-me-before-production-use-at-least-32-chars}
+    access-expiration-seconds: ${JWT_ACCESS_EXPIRATION_SECONDS:900}
+    refresh-expiration-seconds: ${JWT_REFRESH_EXPIRATION_SECONDS:604800}
+  order:
+    reservation-ttl-seconds: ${ORDER_RESERVATION_TTL_SECONDS:900}
+  scheduler:
+    reservation-expiry:
+      enabled: ${ORDER_EXPIRY_JOB_ENABLED:true}
+      delay-ms: ${ORDER_EXPIRY_JOB_DELAY_MS:30000}
+      batch-size: 50
+  seed:
+    enabled: ${APP_SEED_ENABLED:true}

@@ -1,0 +1,12 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:flashsale}
+    username: ${DB_USERNAME:flashsale}
+    password: ${DB_PASSWORD:flashsale}
+    driver-class-name: org.postgresql.Driver
+  cache:
+    type: redis
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
