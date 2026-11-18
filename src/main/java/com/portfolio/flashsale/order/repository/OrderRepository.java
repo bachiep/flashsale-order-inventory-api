@@ -31,6 +31,13 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             """)
     List<Long> findExpiredPendingOrderIds(@Param("now") Instant now, Pageable pageable);
 
+    @Query("""
+            SELECT o.id FROM Order o
+            WHERE o.status = com.portfolio.flashsale.order.domain.OrderStatus.PENDING_PAYMENT
+            ORDER BY o.expiresAt ASC, o.id ASC
+            """)
+    List<Long> findAllPendingOrderIds(Pageable pageable);
+
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("""
             UPDATE Order o
@@ -64,4 +71,15 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
               AND o.expiresAt <= :now
             """)
     int markExpiredIfPendingAndPastDeadline(@Param("orderId") Long orderId, @Param("now") Instant now);
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("""
+            UPDATE Order o
+            SET o.status = com.portfolio.flashsale.order.domain.OrderStatus.EXPIRED,
+                o.expiresAt = CASE WHEN o.expiresAt > :now THEN :now ELSE o.expiresAt END,
+                o.updatedAt = :now
+            WHERE o.id = :orderId
+              AND o.status = com.portfolio.flashsale.order.domain.OrderStatus.PENDING_PAYMENT
+            """)
+    int markExpiredImmediatelyIfPending(@Param("orderId") Long orderId, @Param("now") Instant now);
 }

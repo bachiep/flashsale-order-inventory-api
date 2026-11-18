@@ -55,6 +55,8 @@ public class OrderController {
             @ApiResponse(responseCode = "404", description = "Referenced product or voucher not found",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class))),
             @ApiResponse(responseCode = "409", description = "Insufficient sellable stock, idempotency payload mismatch, or voucher conflict",
+                    content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "429", description = "Per-actor token-bucket rate limit exceeded (includes Retry-After header)",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
     })
     public ResponseEntity<OrderResponse> createOrder(

@@ -237,6 +237,86 @@ class OrderExpiryIntegrationTest {
                 .andExpect(jsonPath("$.errorCode").value("INVALID_PARAMETER"));
     }
 
+    @Test
+    void adminExpireNowRequiresAdminRoleAndImmediatelyReleasesPendingOrderStock() throws Exception {
+        Instant t0 = mutableClock.instant();
+        User admin = userRepository.save(new User(
+                "admin-expire@flashsale.local",
+                passwordEncoder.encode("Admin@1234"),
+                "Expire Admin",
+                Role.ROLE_ADMIN,
+                t0
+        ));
+        User buyer = userRepository.save(new User(
+                "buyer-expire@flashsale.local",
+                passwordEncoder.encode("Pass@1234"),
+                "Expire Buyer",
+                Role.ROLE_CUSTOMER,
+                t0
+        ));
+        String adminToken = jwtService.generateAccessToken(admin);
+        String buyerToken = jwtService.generateAccessToken(buyer);
+
+        Product product = productRepository.save(new Product(
+                "FS-NOW-01",
+                "Instant Sweep Keyboard",
+                "Mechanical",
+                "Peripherals",
+                new BigDecimal("100.00"),
+                true,
+                4,
+                t0
+        ));
+
+        MvcResult orderResult = mockMvc.perform(post("/api/v1/orders")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + buyerToken)
+                        .header("Idempotency-Key", "expire-now-001")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"items\":[{\"productId\":" + product.getId() + ",\"quantity\":2}]}"))
+                .andExpect(status().isCreated())
+                .andReturn();
+        Long orderId = objectMapper.readTree(orderResult.getResponse().getContentAsString()).get("id").asLong();
+
+        // Customer role cannot call admin expiry endpoint
+        mockMvc.perform(post("/api/v1/admin/orders/expire-now")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + buyerToken)
+                        .param("includeActiveHolds", "true")
+                        .param("orderId", String.valueOf(orderId)))
+                .andExpect(status().isForbidden());
+
+        // Without includeActiveHolds=true, active hold is not yet past TTL
+        mockMvc.perform(post("/api/v1/admin/orders/expire-now")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.expiredCount").value(0));
+
+        // With includeActiveHolds=true, admin sweep expires the active hold immediately
+        mockMvc.perform(post("/api/v1/admin/orders/expire-now")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                        .param("includeActiveHolds", "true")
+                        .param("orderId", String.valueOf(orderId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.expiredCount").value(1))
+                .andExpect(jsonPath("$.includeActiveHolds").value(true))
+                .andExpect(jsonPath("$.targetedOrderId").value(orderId));
+
+        Order expiredOrder = orderRepository.findDetailedById(orderId).orElseThrow();
+        assertThat(expiredOrder.getStatus()).isEqualTo(OrderStatus.EXPIRED);
+
+        InventoryItem restored = inventoryItemRepository.findByProductId(product.getId()).orElseThrow();
+        assertThat(restored.getAvailableQty()).isEqualTo(4);
+        assertThat(restored.getReservedQty()).isEqualTo(0);
+        assertThat(restored.getSellableQty()).isEqualTo(4);
+
+        // Missing targeted order returns 404
+        mockMvc.perform(post("/api/v1/admin/orders/expire-now")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                        .param("includeActiveHolds", "true")
+                        .param("orderId", "999999"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorCode").value("ORDER_NOT_FOUND"));
+    }
+
     private void cleanAll() {
         idempotencyRecordRepository.deleteAll();
         orderRepository.deleteAll();

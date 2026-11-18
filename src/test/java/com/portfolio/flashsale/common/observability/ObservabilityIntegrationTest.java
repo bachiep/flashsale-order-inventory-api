@@ -295,12 +295,17 @@ class ObservabilityIntegrationTest {
                 .andExpect(jsonPath("$.paths['/api/v1/orders'].post.responses['201'].content['application/json'].schema.$ref").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/orders'].post.responses['409'].content['application/problem+json'].schema.$ref")
                         .value("#/components/schemas/ProblemDetail"))
+                .andExpect(jsonPath("$.paths['/api/v1/orders'].post.responses['429'].content['application/problem+json'].schema.$ref")
+                        .value("#/components/schemas/ProblemDetail"))
                 .andExpect(jsonPath("$.paths['/api/v1/orders'].post.responses['400'].content['application/problem+json'].schema.$ref")
                         .value("#/components/schemas/ProblemDetail"))
                 .andExpect(jsonPath("$.paths['/api/v1/orders/{id}'].get.responses['403'].content['application/problem+json'].schema.$ref")
                         .value("#/components/schemas/ProblemDetail"))
+                .andExpect(jsonPath("$.paths['/api/v1/admin/orders/expire-now'].post.responses['200']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/vouchers/{code}/claim'].post.responses['201']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/vouchers/{code}/claim'].post.responses['409'].content['application/problem+json'].schema.$ref")
+                        .value("#/components/schemas/ProblemDetail"))
+                .andExpect(jsonPath("$.paths['/api/v1/vouchers/{code}/claim'].post.responses['429'].content['application/problem+json'].schema.$ref")
                         .value("#/components/schemas/ProblemDetail"))
                 .andExpect(jsonPath("$.paths['/api/v1/auth/login'].post.responses['401'].content['application/problem+json'].schema.$ref")
                         .value("#/components/schemas/ProblemDetail"))
@@ -312,7 +317,7 @@ class ObservabilityIntegrationTest {
                 .andReturn();
 
         JsonNode root = objectMapper.readTree(result.getResponse().getContentAsString());
-        assertThat(root.path("info").path("version").asText()).isEqualTo("v2.0");
+        assertThat(root.path("info").path("version").asText()).isEqualTo("v2.1");
     }
 
     @Test
@@ -320,14 +325,18 @@ class ObservabilityIntegrationTest {
         mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
-                .andExpect(content().string(containsString("FlashSale Order &amp; Inventory Console v2.0")))
+                .andExpect(content().string(containsString("FlashSale Order &amp; Inventory Console v2.1")))
+                .andExpect(content().string(containsString("Rate-Limit Rejected (429)")))
+                .andExpect(content().string(containsString("Flash Voucher Quota &amp; Rate-Limit Race Simulator")))
+                .andExpect(content().string(containsString("End-to-End Order Lifecycle Sandbox")))
                 .andExpect(content().string(containsString("/swagger-ui/index.html")))
                 .andExpect(content().string(containsString("/api/v1/metrics/summary")));
 
         mockMvc.perform(get("/index.html"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
-                .andExpect(content().string(containsString("Fire 30 Concurrent Buyers on Limited SKU")));
+                .andExpect(content().string(containsString("Fire 30 Concurrent Buyers on Limited SKU")))
+                .andExpect(content().string(containsString("Expire Now (TTL Sweep)")));
     }
 
     private MetricsSummaryResponse readMetricsSummary() throws Exception {

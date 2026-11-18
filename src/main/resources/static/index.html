@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FlashSale Order &amp; Inventory Console v2.0</title>
+  <title>FlashSale Order &amp; Inventory Console v2.1</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2322C55E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='13 2 3 14 12 14 11 22 21 10 12 10 13 2'/%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -47,6 +47,7 @@
       font-size: 14px;
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
     }
 
     a {
@@ -119,13 +120,13 @@
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
     .brand-subtitle {
-      margin: 2px 0 0;
+      margin: 3px 0 0;
       color: var(--text-muted);
-      font-size: 0.85rem;
+      font-size: 0.84rem;
     }
 
     .header-actions {
@@ -139,9 +140,9 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 5px 10px;
+      padding: 4px 10px;
       border-radius: 999px;
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       font-weight: 600;
       font-family: var(--font-mono);
       border: 1px solid var(--border);
@@ -193,7 +194,7 @@
       background: var(--bg-elevated);
       color: var(--text-primary);
       font-weight: 600;
-      font-size: 0.85rem;
+      font-size: 0.84rem;
       cursor: pointer;
       transition: background-color 180ms ease, border-color 180ms ease, transform 120ms ease, opacity 180ms ease;
       text-align: center;
@@ -247,6 +248,17 @@
       border-color: var(--accent-amber);
     }
 
+    .btn-red {
+      background: var(--accent-red-soft);
+      border-color: rgba(239, 68, 68, 0.45);
+      color: var(--accent-red);
+    }
+
+    .btn-red:hover:not(:disabled) {
+      background: rgba(239, 68, 68, 0.24);
+      border-color: var(--accent-red);
+    }
+
     .btn-sm {
       padding: 6px 10px;
       font-size: 0.78rem;
@@ -296,10 +308,10 @@
       word-break: break-all;
     }
 
-    /* Telemetry KPI Grid */
+    /* Telemetry KPI Grid (9 cards -> clean 3x3 on desktop) */
     .metrics-grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 12px;
     }
 
@@ -310,7 +322,7 @@
       padding: 12px 14px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
       min-width: 0;
     }
 
@@ -322,7 +334,7 @@
 
     .metric-value {
       font-family: var(--font-mono);
-      font-size: clamp(1.25rem, 2.2vw, 1.65rem);
+      font-size: clamp(1.2rem, 2.1vw, 1.6rem);
       font-weight: 700;
       font-variant-numeric: tabular-nums;
       color: var(--text-primary);
@@ -340,7 +352,7 @@
     .val-amber { color: var(--accent-amber); }
     .val-red { color: var(--accent-red); }
 
-    /* Playground Layout */
+    /* Playground & Labs Layout */
     .playground-grid {
       display: grid;
       grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.85fr);
@@ -348,9 +360,23 @@
       align-items: start;
     }
 
+    .labs-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.95fr);
+      gap: 20px;
+      align-items: start;
+    }
+
     .controls-grid {
       display: grid;
       grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.75fr) minmax(0, 0.75fr);
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .controls-grid-2 {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.7fr);
       gap: 12px;
       margin-bottom: 12px;
     }
@@ -370,6 +396,7 @@
 
     .input, .select {
       width: 100%;
+      min-width: 0;
       background: var(--bg-surface);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
@@ -453,9 +480,60 @@
     .verdict-box .v-num {
       font-family: var(--font-mono);
       font-weight: 700;
-      font-size: 1rem;
+      font-size: 0.98rem;
       font-variant-numeric: tabular-nums;
       margin-top: 2px;
+    }
+
+    /* Order Lifecycle Inspector Card */
+    .order-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      margin-bottom: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .order-card-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .order-kv-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .order-kv {
+      background: rgba(2, 6, 23, 0.55);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      min-width: 0;
+    }
+
+    .order-kv-label {
+      font-size: 0.71rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .order-kv-value {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-primary);
+      margin-top: 2px;
+      word-break: break-word;
     }
 
     /* Tables */
@@ -468,7 +546,7 @@
     }
 
     .table-scroll-y {
-      max-height: 310px;
+      max-height: 290px;
       overflow-y: auto;
     }
 
@@ -485,7 +563,7 @@
       background: #162033;
       color: var(--text-muted);
       font-weight: 600;
-      font-size: 0.75rem;
+      font-size: 0.74rem;
       text-transform: uppercase;
       letter-spacing: 0.04em;
       padding: 9px 12px;
@@ -529,7 +607,7 @@
       transition: width 220ms ease;
     }
 
-    /* Idempotency Step Cards */
+    /* Idempotency Step Cards & Logs */
     .idem-steps {
       display: flex;
       flex-direction: column;
@@ -585,7 +663,7 @@
 
     .voucher-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
       gap: 12px;
     }
 
@@ -624,6 +702,7 @@
       display: flex;
       align-items: flex-start;
       gap: 8px;
+      word-break: break-word;
     }
 
     .alert-banner.hidden {
@@ -651,6 +730,7 @@
 
     @media (max-width: 1080px) {
       .playground-grid,
+      .labs-grid,
       .inventory-voucher-grid {
         grid-template-columns: minmax(0, 1fr);
       }
@@ -671,7 +751,9 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
       .controls-grid,
-      .creds-grid {
+      .controls-grid-2,
+      .creds-grid,
+      .order-kv-grid {
         grid-template-columns: minmax(0, 1fr);
       }
       .verdict-strip {
@@ -699,14 +781,15 @@
         </div>
         <div class="brand-text">
           <h1 class="brand-title">
-            <span>FlashSale Order &amp; Inventory Console v2.0</span>
+            <span>FlashSale Order &amp; Inventory Console</span>
+            <span class="pill pill-cyan">v2.1</span>
             <span id="healthBadge" class="pill pill-green">
               <span class="status-dot" aria-hidden="true"></span>
               <span id="healthText">Checking API...</span>
             </span>
           </h1>
           <p class="brand-subtitle">
-            Atomic SQL Stock Reservation &middot; Idempotency-Key Snapshots &middot; Micrometer Telemetry &middot; X-Request-Id Correlation
+            Java 21 Virtual Threads &middot; Token-Bucket Rate Limiter &middot; Atomic SQL Stock Reservation &middot; Idempotency-Key &middot; Micrometer Telemetry
           </p>
         </div>
       </div>
@@ -796,10 +879,15 @@
           <span id="mVoucherQuotaConflicts" class="metric-value val-red">0</span>
           <span class="metric-key">voucherQuotaConflicts</span>
         </div>
+        <div class="metric-card">
+          <span class="metric-label">Rate-Limit Rejected (429)</span>
+          <span id="mRateLimitRejected" class="metric-value val-red">0</span>
+          <span class="metric-key">rateLimitRejected</span>
+        </div>
       </div>
     </section>
 
-    <!-- Interactive Concurrency & Idempotency Playground -->
+    <!-- Row 1: Concurrent Checkout Simulator & Idempotency Probe -->
     <section class="playground-grid" aria-label="Interactive Concurrency and Idempotency Playground">
       <!-- Concurrency Burst Panel -->
       <div class="panel">
@@ -980,7 +1068,223 @@
       </div>
     </section>
 
-    <!-- Live SKU Inventory & Active Vouchers -->
+    <!-- Row 2: v2.1 Voucher Rate-Limit Race Simulator & Order Lifecycle Sandbox -->
+    <section class="labs-grid" aria-label="Flash Voucher Race Simulator and End-to-End Order Lifecycle Sandbox">
+      <!-- Flash Voucher Quota & Rate-Limit Race Simulator -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              <polyline points="9 12 11 14 15 10"></polyline>
+            </svg>
+            <h2 class="panel-title">Flash Voucher Quota &amp; Rate-Limit Race Simulator</h2>
+          </div>
+          <span id="voucherRacePill" class="pill">Ready</span>
+        </div>
+
+        <p style="margin: 0 0 12px; color: var(--text-muted); font-size: 0.84rem;">
+          Exercise per-actor Token-Bucket rate limiting (<span class="mono">429 Too Many Requests</span> + <span class="mono">Retry-After</span>) and atomic SQL voucher quota guards (<span class="mono">201 Claimed</span> vs <span class="mono">409 Conflict</span>).
+        </p>
+
+        <div id="voucherRaceBanner" class="alert-banner hidden" role="status"></div>
+
+        <div class="controls-grid-2">
+          <div class="field">
+            <label for="voucherRaceSelect">Target Active Voucher (for Rapid Burst)</label>
+            <select id="voucherRaceSelect" class="select"></select>
+          </div>
+          <div class="field">
+            <label for="voucherBurstCountInput">Single-Actor Burst Size</label>
+            <input id="voucherBurstCountInput" class="input mono" type="number" min="6" max="20" value="8" />
+          </div>
+        </div>
+
+        <div class="action-row">
+          <button id="voucherBurstBtn" class="btn btn-red" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <span id="voucherBurstLabel">Single-Actor Rapid Burst (201 / 409 / 429)</span>
+          </button>
+
+          <button id="voucherQuotaRaceBtn" class="btn btn-cyan" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+              <line x1="7" y1="7" x2="7.01" y2="7"></line>
+            </svg>
+            <span>Multi-Buyer Quota Race (8 Buyers -&gt; 3 Quota)</span>
+          </button>
+        </div>
+
+        <div class="verdict-strip">
+          <div class="verdict-box">
+            <div class="v-label">201 Claimed</div>
+            <div id="vStatClaimed" class="v-num val-green">--</div>
+          </div>
+          <div class="verdict-box">
+            <div class="v-label">409 Conflict</div>
+            <div id="vStatConflict" class="v-num val-amber">--</div>
+          </div>
+          <div class="verdict-box">
+            <div class="v-label">429 Rate Limited</div>
+            <div id="vStatRateLimited" class="v-num val-red">--</div>
+          </div>
+          <div class="verdict-box">
+            <div class="v-label">Limit Header</div>
+            <div id="vStatLimit" class="v-num val-cyan">--</div>
+          </div>
+          <div class="verdict-box">
+            <div class="v-label">p50 Latency</div>
+            <div id="vStatP50" class="v-num val-cyan">--</div>
+          </div>
+          <div class="verdict-box">
+            <div class="v-label">p95 Latency</div>
+            <div id="vStatP95" class="v-num">--</div>
+          </div>
+        </div>
+
+        <div class="table-scroll table-scroll-y">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Actor</th>
+                <th>HTTP Status</th>
+                <th>Outcome / ErrorCode</th>
+                <th>X-RateLimit-Rem</th>
+                <th>Retry-After</th>
+                <th>X-Request-Id</th>
+              </tr>
+            </thead>
+            <tbody id="voucherRaceLogBody">
+              <tr>
+                <td colspan="7" style="text-align:center; color: var(--text-muted); padding: 22px;">
+                  Click "Single-Actor Rapid Burst" to observe 201 Claimed, 409 VOUCHER_ALREADY_CLAIMED, and 429 RATE_LIMIT_EXCEEDED live, or "Multi-Buyer Quota Race" for 8-way contention on a 3-quota campaign.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- End-to-End Order Lifecycle Sandbox -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <polyline points="9 11 12 14 22 4"></polyline>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+            </svg>
+            <h2 class="panel-title">End-to-End Order Lifecycle Sandbox</h2>
+          </div>
+          <span id="lifecyclePill" class="pill">No Active Order</span>
+        </div>
+
+        <p style="margin: 0 0 12px; color: var(--text-muted); font-size: 0.84rem;">
+          Reserve stock (<span class="mono">PENDING_PAYMENT</span>), inspect <span class="mono">reservedQty</span>, then transition to <span class="mono">CONFIRMED</span>, <span class="mono">CANCELLED</span>, or trigger an immediate TTL sweep (<span class="mono">EXPIRED</span>) via <span class="mono">POST /api/v1/admin/orders/expire-now</span>.
+        </p>
+
+        <div id="lifecycleBanner" class="alert-banner hidden" role="status"></div>
+
+        <div class="controls-grid">
+          <div class="field">
+            <label for="lifecycleSkuSelect">Sandbox SKU</label>
+            <select id="lifecycleSkuSelect" class="select"></select>
+          </div>
+          <div class="field">
+            <label for="lifecycleQtyInput">Quantity</label>
+            <input id="lifecycleQtyInput" class="input mono" type="number" min="1" max="5" value="1" />
+          </div>
+          <div class="field">
+            <label for="lifecycleVoucherSelect">Apply Voucher</label>
+            <select id="lifecycleVoucherSelect" class="select">
+              <option value="">None</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="action-row">
+          <button id="lifecycleReserveBtn" class="btn btn-primary" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="9" cy="21" r="1"></circle>
+              <circle cx="20" cy="21" r="1"></circle>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
+            <span>1. Reserve Order (PENDING_PAYMENT)</span>
+          </button>
+          <button id="lifecycleConfirmBtn" class="btn btn-cyan" type="button" disabled>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span>Confirm Payment</span>
+          </button>
+          <button id="lifecycleCancelBtn" class="btn btn-amber" type="button" disabled>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+            <span>Cancel Order</span>
+          </button>
+          <button id="lifecycleExpireBtn" class="btn btn-red" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span>Expire Now (TTL Sweep)</span>
+          </button>
+        </div>
+
+        <div class="order-card" id="lifecycleOrderCard">
+          <div class="order-card-head">
+            <div>
+              <span class="mono" style="color: var(--text-muted);">Order: </span>
+              <strong id="lcOrderRef" class="mono">Not created yet</strong>
+            </div>
+            <span id="lcStatusBadge" class="pill">IDLE</span>
+          </div>
+
+          <div class="order-kv-grid">
+            <div class="order-kv">
+              <div class="order-kv-label">Subtotal / Discount</div>
+              <div id="lcAmounts" class="order-kv-value">--</div>
+            </div>
+            <div class="order-kv">
+              <div class="order-kv-label">Final Total</div>
+              <div id="lcTotal" class="order-kv-value val-green">--</div>
+            </div>
+            <div class="order-kv">
+              <div class="order-kv-label">Voucher / Buyer</div>
+              <div id="lcVoucherBuyer" class="order-kv-value">--</div>
+            </div>
+            <div class="order-kv">
+              <div class="order-kv-label">SKU Available</div>
+              <div id="lcSkuAvailable" class="order-kv-value">--</div>
+            </div>
+            <div class="order-kv">
+              <div class="order-kv-label">SKU Reserved</div>
+              <div id="lcSkuReserved" class="order-kv-value val-amber">--</div>
+            </div>
+            <div class="order-kv">
+              <div class="order-kv-label">SKU Sellable</div>
+              <div id="lcSkuSellable" class="order-kv-value val-cyan">--</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="idem-step">
+          <div class="idem-step-head">
+            <span class="idem-step-title">Lifecycle Transition Trace</span>
+            <span id="lcTraceReqId" class="panel-meta">X-Request-Id: --</span>
+          </div>
+          <pre id="lcTraceLog" class="code-box" style="margin-top:0;">Click "1. Reserve Order (PENDING_PAYMENT)" to place an order, inspect reservedQty, and test Confirm, Cancel, or Immediate TTL Expiry Sweep.</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Row 3: Live SKU Inventory & Active Vouchers -->
     <section class="inventory-voucher-grid" aria-label="Live SKU Inventory and Flash Vouchers">
       <div class="panel">
         <div class="panel-header">
@@ -1048,6 +1352,10 @@
         products: [],
         vouchers: [],
         selectedProductId: 1,
+        lifecycleProductId: 1,
+        lifecycleOrder: null,
+        lifecycleBuyer: null,
+        lifecycleLogs: [],
         autoPoll: true,
         pollHandle: null,
         tokens: {}
@@ -1067,6 +1375,7 @@
         mIdempotentReplays: document.getElementById('mIdempotentReplays'),
         mVouchersClaimed: document.getElementById('mVouchersClaimed'),
         mVoucherQuotaConflicts: document.getElementById('mVoucherQuotaConflicts'),
+        mRateLimitRejected: document.getElementById('mRateLimitRejected'),
         skuSelect: document.getElementById('skuSelect'),
         targetSellableInput: document.getElementById('targetSellableInput'),
         buyerCountInput: document.getElementById('buyerCountInput'),
@@ -1093,6 +1402,39 @@
         idemStatePill: document.getElementById('idemStatePill'),
         idemBanner: document.getElementById('idemBanner'),
         idemSteps: document.getElementById('idemSteps'),
+        voucherRacePill: document.getElementById('voucherRacePill'),
+        voucherRaceBanner: document.getElementById('voucherRaceBanner'),
+        voucherRaceSelect: document.getElementById('voucherRaceSelect'),
+        voucherBurstCountInput: document.getElementById('voucherBurstCountInput'),
+        voucherBurstBtn: document.getElementById('voucherBurstBtn'),
+        voucherBurstLabel: document.getElementById('voucherBurstLabel'),
+        voucherQuotaRaceBtn: document.getElementById('voucherQuotaRaceBtn'),
+        vStatClaimed: document.getElementById('vStatClaimed'),
+        vStatConflict: document.getElementById('vStatConflict'),
+        vStatRateLimited: document.getElementById('vStatRateLimited'),
+        vStatLimit: document.getElementById('vStatLimit'),
+        vStatP50: document.getElementById('vStatP50'),
+        vStatP95: document.getElementById('vStatP95'),
+        voucherRaceLogBody: document.getElementById('voucherRaceLogBody'),
+        lifecyclePill: document.getElementById('lifecyclePill'),
+        lifecycleBanner: document.getElementById('lifecycleBanner'),
+        lifecycleSkuSelect: document.getElementById('lifecycleSkuSelect'),
+        lifecycleQtyInput: document.getElementById('lifecycleQtyInput'),
+        lifecycleVoucherSelect: document.getElementById('lifecycleVoucherSelect'),
+        lifecycleReserveBtn: document.getElementById('lifecycleReserveBtn'),
+        lifecycleConfirmBtn: document.getElementById('lifecycleConfirmBtn'),
+        lifecycleCancelBtn: document.getElementById('lifecycleCancelBtn'),
+        lifecycleExpireBtn: document.getElementById('lifecycleExpireBtn'),
+        lcOrderRef: document.getElementById('lcOrderRef'),
+        lcStatusBadge: document.getElementById('lcStatusBadge'),
+        lcAmounts: document.getElementById('lcAmounts'),
+        lcTotal: document.getElementById('lcTotal'),
+        lcVoucherBuyer: document.getElementById('lcVoucherBuyer'),
+        lcSkuAvailable: document.getElementById('lcSkuAvailable'),
+        lcSkuReserved: document.getElementById('lcSkuReserved'),
+        lcSkuSellable: document.getElementById('lcSkuSellable'),
+        lcTraceReqId: document.getElementById('lcTraceReqId'),
+        lcTraceLog: document.getElementById('lcTraceLog'),
         skuLastRequestId: document.getElementById('skuLastRequestId'),
         skuTableBody: document.getElementById('skuTableBody'),
         voucherList: document.getElementById('voucherList')
@@ -1137,6 +1479,9 @@
         const latencyMs = performance.now() - started;
         const requestId = res.headers.get('X-Request-Id') || '';
         const replayed = res.headers.get('X-Idempotency-Replayed');
+        const rateLimitLimit = res.headers.get('X-RateLimit-Limit');
+        const rateLimitRemaining = res.headers.get('X-RateLimit-Remaining');
+        const retryAfter = res.headers.get('Retry-After');
         const text = await res.text();
         let data = null;
         if (text) {
@@ -1146,7 +1491,17 @@
             data = text;
           }
         }
-        return { ok: res.ok, status: res.status, data, requestId, replayed, latencyMs };
+        return {
+          ok: res.ok,
+          status: res.status,
+          data,
+          requestId,
+          replayed,
+          rateLimitLimit,
+          rateLimitRemaining,
+          retryAfter,
+          latencyMs
+        };
       }
 
       async function login(email, password) {
@@ -1165,6 +1520,22 @@
         }
         state.tokens[key] = res.data.accessToken;
         return res.data.accessToken;
+      }
+
+      async function registerEphemeralBuyer(prefix) {
+        const tag = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7);
+        const email = prefix + '-' + tag + '@flashsale.local';
+        const password = 'LabUser@1234';
+        const res = await apiFetch('/api/v1/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, fullName: 'Lab Buyer ' + tag })
+        });
+        if (!res.ok || !res.data || !res.data.accessToken) {
+          throw new Error('Failed to register lab buyer (' + res.status + ')');
+        }
+        state.tokens[email + '::' + password] = res.data.accessToken;
+        return { email, password, token: res.data.accessToken };
       }
 
       async function authFetchWithRetry(email, password, url, buildInit) {
@@ -1206,6 +1577,7 @@
         el.mIdempotentReplays.textContent = m.idempotentReplays;
         el.mVouchersClaimed.textContent = m.vouchersClaimed;
         el.mVoucherQuotaConflicts.textContent = m.voucherQuotaConflicts;
+        el.mRateLimitRejected.textContent = m.rateLimitRejected ?? 0;
         el.telemetryTimestamp.textContent = 'Snapshot: ' + m.timestamp + (res.requestId ? ' | X-Request-Id: ' + res.requestId : '');
       }
 
@@ -1219,13 +1591,22 @@
         const hasPrev = products.some(p => p.id === prevSelected);
         state.selectedProductId = hasPrev ? prevSelected : (products[0] ? products[0].id : 1);
 
-        el.skuSelect.innerHTML = products.map(p => (
-          '<option value="' + p.id + '"' + (p.id === state.selectedProductId ? ' selected' : '') + '>' +
+        const prevLifecycle = Number(el.lifecycleSkuSelect.value || state.lifecycleProductId || 1);
+        state.lifecycleProductId = products.some(p => p.id === prevLifecycle)
+          ? prevLifecycle
+          : (products[0] ? products[0].id : 1);
+
+        const buildSkuOptions = (selectedId) => products.map(p => (
+          '<option value="' + p.id + '"' + (p.id === selectedId ? ' selected' : '') + '>' +
           '#' + p.id + ' ' + escapeHtml(p.sku) + ' - ' + escapeHtml(p.name) +
           ' (sellable: ' + p.sellableQty + ', v' + p.inventoryVersion + ')' +
           '</option>'
         )).join('');
+
+        el.skuSelect.innerHTML = buildSkuOptions(state.selectedProductId);
+        el.lifecycleSkuSelect.innerHTML = buildSkuOptions(state.lifecycleProductId);
         updateActionLabels();
+        updateLifecycleStockSnapshot();
 
         if (!products.length) {
           el.skuTableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:20px;">No active products found.</td></tr>';
@@ -1266,6 +1647,36 @@
 
       function renderVouchers(vouchers) {
         state.vouchers = vouchers;
+
+        const prevRaceCode = el.voucherRaceSelect.value || 'FLASH20';
+        const prevLifecycleVoucher = el.lifecycleVoucherSelect.value;
+
+        if (vouchers.length) {
+          el.voucherRaceSelect.innerHTML = vouchers.map(v => {
+            const rem = v.remainingQuota ?? (v.maxRedemptions - v.claimedCount);
+            return '<option value="' + escapeHtml(v.code) + '"' + (v.code === prevRaceCode ? ' selected' : '') + '>' +
+              escapeHtml(v.code) + ' (remaining: ' + rem + '/' + v.maxRedemptions + ')' +
+              '</option>';
+          }).join('');
+        } else {
+          el.voucherRaceSelect.innerHTML = '<option value="FLASH20">FLASH20</option>';
+        }
+
+        const lifecycleOpts = ['<option value="">None (Full Price)</option>'].concat(
+          vouchers.map(v => {
+            const label = v.discountType === 'PERCENTAGE'
+              ? Number(v.discountValue) + '% OFF'
+              : '$' + Number(v.discountValue).toFixed(2) + ' OFF';
+            const selected = (prevLifecycleVoucher === undefined || prevLifecycleVoucher === '') && v.code === 'FLASH20' && !state.lifecycleOrder
+              ? ' selected'
+              : (prevLifecycleVoucher === v.code ? ' selected' : '');
+            return '<option value="' + escapeHtml(v.code) + '"' + selected + '>' +
+              escapeHtml(v.code) + ' (' + escapeHtml(label) + ', min $' + Number(v.minOrderAmount).toFixed(0) + ')' +
+              '</option>';
+          })
+        );
+        el.lifecycleVoucherSelect.innerHTML = lifecycleOpts.join('');
+
         if (!vouchers.length) {
           el.voucherList.innerHTML = '<div class="voucher-card"><span style="color:var(--text-muted);">No active flash vouchers in the current window.</span></div>';
           return;
@@ -1508,7 +1919,6 @@
           const buyerEmail = el.buyer1Email.value.trim();
           const buyerPass = el.buyerPassword.value;
 
-          // Step 1: First checkout (qty = 1)
           const step1 = await authFetchWithRetry(buyerEmail, buyerPass, '/api/v1/orders', (token) => ({
             method: 'POST',
             headers: {
@@ -1519,7 +1929,6 @@
             body: JSON.stringify({ items: [{ productId: skuId, quantity: 1 }] })
           }));
 
-          // Step 2: Identical retry (qty = 1, same Idempotency-Key)
           const step2 = await authFetchWithRetry(buyerEmail, buyerPass, '/api/v1/orders', (token) => ({
             method: 'POST',
             headers: {
@@ -1530,7 +1939,6 @@
             body: JSON.stringify({ items: [{ productId: skuId, quantity: 1 }] })
           }));
 
-          // Step 3: Conflicting payload (qty = 2, same Idempotency-Key)
           const step3 = await authFetchWithRetry(buyerEmail, buyerPass, '/api/v1/orders', (token) => ({
             method: 'POST',
             headers: {
@@ -1607,10 +2015,416 @@
         }
       });
 
+      /* === v2.1 Flash Voucher Quota & Rate-Limit Race Simulator === */
+      function setVoucherRaceBusy(busy, label) {
+        el.voucherBurstBtn.disabled = busy;
+        el.voucherQuotaRaceBtn.disabled = busy;
+        el.voucherRacePill.className = busy ? 'pill pill-amber' : 'pill pill-green';
+        el.voucherRacePill.textContent = label;
+      }
+
+      function renderVoucherRaceResults(results) {
+        const claimed = results.filter(r => r.status === 201).length;
+        const conflicts = results.filter(r => r.status === 409).length;
+        const rateLimited = results.filter(r => r.status === 429).length;
+        const limitHeader = results.find(r => r.rateLimitLimit)?.rateLimitLimit || '--';
+        const latencies = results.map(r => r.latencyMs).sort((a, b) => a - b);
+
+        el.vStatClaimed.textContent = String(claimed);
+        el.vStatConflict.textContent = String(conflicts);
+        el.vStatRateLimited.textContent = String(rateLimited);
+        el.vStatLimit.textContent = String(limitHeader);
+        el.vStatP50.textContent = percentile(latencies, 50).toFixed(1) + ' ms';
+        el.vStatP95.textContent = percentile(latencies, 95).toFixed(1) + ' ms';
+
+        el.voucherRaceLogBody.innerHTML = results.map(r => {
+          const statusPill = r.status === 201
+            ? '<span class="pill pill-green">201 Claimed</span>'
+            : (r.status === 429
+              ? '<span class="pill pill-red">429 Limited</span>'
+              : (r.status === 409
+                ? '<span class="pill pill-amber">409 Conflict</span>'
+                : '<span class="pill">' + r.status + '</span>'));
+          const outcome = r.status === 201 && r.data
+            ? escapeHtml(r.data.voucherCode) + ' (' + escapeHtml(r.data.status) + ')'
+            : (r.data && r.data.errorCode ? escapeHtml(r.data.errorCode) : 'HTTP ' + r.status);
+          return (
+            '<tr>' +
+              '<td class="mono">' + r.index + '</td>' +
+              '<td class="mono">' + escapeHtml(r.actorLabel) + '</td>' +
+              '<td>' + statusPill + '</td>' +
+              '<td class="mono">' + outcome + '</td>' +
+              '<td class="mono">' + escapeHtml(r.rateLimitRemaining ?? '-') + '</td>' +
+              '<td class="mono">' + escapeHtml(r.retryAfter ? r.retryAfter + 's' : '-') + '</td>' +
+              '<td class="mono" style="color:var(--accent-cyan);">' + escapeHtml(r.requestId || '-') + '</td>' +
+            '</tr>'
+          );
+        }).join('');
+
+        return { claimed, conflicts, rateLimited };
+      }
+
+      el.voucherBurstBtn.addEventListener('click', async () => {
+        const code = el.voucherRaceSelect.value || 'FLASH20';
+        const burstCount = Math.max(6, Math.min(20, Number(el.voucherBurstCountInput.value || 8)));
+        hideBanner(el.voucherRaceBanner);
+        setVoucherRaceBusy(true, 'Firing ' + burstCount + 'x Burst...');
+
+        try {
+          const buyer = await registerEphemeralBuyer('rl-burst');
+          const actorLabel = buyer.email.split('@')[0];
+          const results = [];
+
+          // Fire sequentially in rapid loop so request #1 deterministically claims first, #2..5 hit 409, and #6..N hit 429
+          for (let i = 0; i < burstCount; i++) {
+            const res = await apiFetch('/api/v1/vouchers/' + encodeURIComponent(code) + '/claim', {
+              method: 'POST',
+              headers: { 'Authorization': 'Bearer ' + buyer.token }
+            });
+            results.push({ index: i + 1, actorLabel, ...res });
+          }
+
+          const counts = renderVoucherRaceResults(results);
+          await refreshAll();
+
+          el.voucherRacePill.className = counts.rateLimited > 0 ? 'pill pill-green' : 'pill pill-amber';
+          el.voucherRacePill.textContent = counts.rateLimited + ' x 429';
+          showBanner(
+            el.voucherRaceBanner,
+            counts.rateLimited > 0 ? 'success' : 'error',
+            'Single-actor burst on ' + code + ' (' + burstCount + ' calls): ' +
+            counts.claimed + ' x 201 Claimed, ' + counts.conflicts + ' x 409 Conflict, ' +
+            counts.rateLimited + ' x 429 RATE_LIMIT_EXCEEDED (Retry-After enforced).'
+          );
+        } catch (err) {
+          el.voucherRacePill.className = 'pill pill-red';
+          el.voucherRacePill.textContent = 'Failed';
+          showBanner(el.voucherRaceBanner, 'error', err.message);
+        } finally {
+          el.voucherBurstBtn.disabled = false;
+          el.voucherQuotaRaceBtn.disabled = false;
+        }
+      });
+
+      el.voucherQuotaRaceBtn.addEventListener('click', async () => {
+        hideBanner(el.voucherRaceBanner);
+        setVoucherRaceBusy(true, 'Racing 8 Buyers...');
+
+        try {
+          const tag = Date.now().toString(36).slice(-5).toUpperCase();
+          const tempCode = 'RACE' + tag;
+          const nowMs = Date.now();
+          const createRes = await authFetchWithRetry(
+            el.adminEmail.value.trim(),
+            el.adminPassword.value,
+            '/api/v1/admin/vouchers',
+            (token) => ({
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+              },
+              body: JSON.stringify({
+                code: tempCode,
+                discountType: 'PERCENTAGE',
+                discountValue: 15.00,
+                minOrderAmount: 20.00,
+                maxRedemptions: 3,
+                startsAt: new Date(nowMs - 60_000).toISOString(),
+                endsAt: new Date(nowMs + 3_600_000).toISOString(),
+                active: true
+              })
+            })
+          );
+          if (!createRes.ok) {
+            throw new Error('Could not create demo race voucher (' + createRes.status + ')');
+          }
+
+          const buyers = await Promise.all(
+            Array.from({ length: 8 }, (_, idx) => registerEphemeralBuyer('vrace-' + idx))
+          );
+
+          const results = await Promise.all(
+            buyers.map((b, idx) =>
+              apiFetch('/api/v1/vouchers/' + encodeURIComponent(tempCode) + '/claim', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + b.token }
+              }).then((res) => ({
+                index: idx + 1,
+                actorLabel: 'buyer-' + (idx + 1),
+                ...res
+              }))
+            )
+          );
+
+          const counts = renderVoucherRaceResults(results);
+          await refreshAll();
+
+          const validQuota = counts.claimed === 3 && counts.conflicts === 5;
+          el.voucherRacePill.className = validQuota ? 'pill pill-green' : 'pill pill-amber';
+          el.voucherRacePill.textContent = counts.claimed + '/3 Claimed';
+          showBanner(
+            el.voucherRaceBanner,
+            validQuota ? 'success' : 'error',
+            '8-buyer concurrent race on ' + tempCode + ' (maxRedemptions=3): ' +
+            counts.claimed + ' x 201 Claimed, ' + counts.conflicts + ' x 409 VOUCHER_QUOTA_EXHAUSTED, 0 over-claims.'
+          );
+        } catch (err) {
+          el.voucherRacePill.className = 'pill pill-red';
+          el.voucherRacePill.textContent = 'Failed';
+          showBanner(el.voucherRaceBanner, 'error', err.message);
+        } finally {
+          el.voucherBurstBtn.disabled = false;
+          el.voucherQuotaRaceBtn.disabled = false;
+        }
+      });
+
+      /* === v2.1 End-to-End Order Lifecycle Sandbox === */
+      function updateLifecycleStockSnapshot() {
+        const targetId = state.lifecycleOrder && state.lifecycleOrder.items && state.lifecycleOrder.items[0]
+          ? state.lifecycleOrder.items[0].productId
+          : Number(el.lifecycleSkuSelect.value || state.lifecycleProductId || 1);
+        const product = state.products.find(p => p.id === targetId);
+        if (product) {
+          el.lcSkuAvailable.textContent = String(product.availableQty);
+          el.lcSkuReserved.textContent = String(product.reservedQty);
+          el.lcSkuSellable.textContent = String(product.sellableQty) + ' (v' + product.inventoryVersion + ')';
+        }
+      }
+
+      function renderLifecycleOrder(order, requestId, note) {
+        state.lifecycleOrder = order;
+        if (requestId) {
+          el.lcTraceReqId.textContent = 'X-Request-Id: ' + requestId;
+        }
+        if (note) {
+          const ts = new Date().toISOString().slice(11, 19) + 'Z';
+          state.lifecycleLogs.unshift('[' + ts + '] ' + note + (requestId ? ' (X-Request-Id: ' + requestId + ')' : ''));
+          if (state.lifecycleLogs.length > 6) state.lifecycleLogs.pop();
+          el.lcTraceLog.textContent = state.lifecycleLogs.join('\n');
+        }
+
+        if (!order) {
+          el.lcOrderRef.textContent = 'Not created yet';
+          el.lcStatusBadge.className = 'pill';
+          el.lcStatusBadge.textContent = 'IDLE';
+          el.lifecyclePill.className = 'pill';
+          el.lifecyclePill.textContent = 'No Active Order';
+          el.lifecycleConfirmBtn.disabled = true;
+          el.lifecycleCancelBtn.disabled = true;
+          updateLifecycleStockSnapshot();
+          return;
+        }
+
+        el.lcOrderRef.textContent = '#' + order.id + ' (' + order.orderNumber + ')';
+        const status = order.status;
+        const badgeClass = status === 'CONFIRMED'
+          ? 'pill pill-green'
+          : (status === 'PENDING_PAYMENT'
+            ? 'pill pill-amber'
+            : (status === 'EXPIRED' ? 'pill pill-red' : 'pill'));
+        el.lcStatusBadge.className = badgeClass;
+        el.lcStatusBadge.textContent = status;
+        el.lifecyclePill.className = badgeClass;
+        el.lifecyclePill.textContent = '#' + order.id + ' ' + status;
+
+        el.lcAmounts.textContent = '$' + Number(order.subtotalAmount).toFixed(2) + ' / -$' + Number(order.discountAmount).toFixed(2);
+        el.lcTotal.textContent = '$' + Number(order.totalAmount).toFixed(2);
+        el.lcVoucherBuyer.textContent = (order.voucherCode || 'None') + ' | ' + (state.lifecycleBuyer ? state.lifecycleBuyer.email.split('@')[0] : 'demo');
+
+        const isPending = status === 'PENDING_PAYMENT';
+        el.lifecycleConfirmBtn.disabled = !isPending;
+        el.lifecycleCancelBtn.disabled = !isPending;
+        updateLifecycleStockSnapshot();
+      }
+
+      el.lifecycleReserveBtn.addEventListener('click', async () => {
+        const skuId = Number(el.lifecycleSkuSelect.value || state.lifecycleProductId || 1);
+        const qty = Math.max(1, Math.min(5, Number(el.lifecycleQtyInput.value || 1)));
+        const voucherCode = el.lifecycleVoucherSelect.value;
+        hideBanner(el.lifecycleBanner);
+        el.lifecycleReserveBtn.disabled = true;
+
+        try {
+          const checkRes = await apiFetch('/api/v1/products/' + skuId);
+          if (checkRes.ok && checkRes.data && checkRes.data.sellableQty < qty) {
+            await prepSkuSellableQty(skuId, Math.max(5, qty));
+          }
+
+          const buyer = await registerEphemeralBuyer('sandbox');
+          state.lifecycleBuyer = buyer;
+
+          if (voucherCode) {
+            const claimRes = await apiFetch('/api/v1/vouchers/' + encodeURIComponent(voucherCode) + '/claim', {
+              method: 'POST',
+              headers: { 'Authorization': 'Bearer ' + buyer.token }
+            });
+            if (!claimRes.ok && claimRes.status !== 409) {
+              throw new Error('Failed to claim voucher ' + voucherCode + ' (' + claimRes.status + ')');
+            }
+          }
+
+          const idemKey = 'ui-lc-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
+          const payload = { items: [{ productId: skuId, quantity: qty }] };
+          if (voucherCode) {
+            payload.voucherCode = voucherCode;
+          }
+
+          const createRes = await apiFetch('/api/v1/orders', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + buyer.token,
+              'Idempotency-Key': idemKey
+            },
+            body: JSON.stringify(payload)
+          });
+
+          if (!createRes.ok || !createRes.data) {
+            const detail = createRes.data && createRes.data.detail ? createRes.data.detail : 'HTTP ' + createRes.status;
+            throw new Error('Order reserve failed: ' + detail);
+          }
+
+          await refreshAll();
+          renderLifecycleOrder(
+            createRes.data,
+            createRes.requestId,
+            'RESERVED #' + createRes.data.id + ' (' + createRes.data.orderNumber + ') -> PENDING_PAYMENT, qty=' + qty +
+            (voucherCode ? ', voucher=' + voucherCode : '')
+          );
+          showBanner(
+            el.lifecycleBanner,
+            'success',
+            'Order #' + createRes.data.id + ' reserved in PENDING_PAYMENT. Inventory reservedQty incremented by ' + qty + '.'
+          );
+        } catch (err) {
+          showBanner(el.lifecycleBanner, 'error', err.message);
+        } finally {
+          el.lifecycleReserveBtn.disabled = false;
+        }
+      });
+
+      el.lifecycleConfirmBtn.addEventListener('click', async () => {
+        if (!state.lifecycleOrder || !state.lifecycleBuyer) return;
+        const orderId = state.lifecycleOrder.id;
+        hideBanner(el.lifecycleBanner);
+        el.lifecycleConfirmBtn.disabled = true;
+        el.lifecycleCancelBtn.disabled = true;
+
+        try {
+          const res = await apiFetch('/api/v1/orders/' + orderId + '/confirm', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + state.lifecycleBuyer.token }
+          });
+          if (!res.ok || !res.data) {
+            const detail = res.data && res.data.detail ? res.data.detail : 'HTTP ' + res.status;
+            throw new Error('Confirm failed: ' + detail);
+          }
+          await refreshAll();
+          renderLifecycleOrder(
+            res.data,
+            res.requestId,
+            'CONFIRMED #' + orderId + ' -> reservedQty released & availableQty permanently deducted'
+          );
+          showBanner(el.lifecycleBanner, 'success', 'Order #' + orderId + ' CONFIRMED. Stock permanently deducted.');
+        } catch (err) {
+          showBanner(el.lifecycleBanner, 'error', err.message);
+          renderLifecycleOrder(state.lifecycleOrder, null, null);
+        }
+      });
+
+      el.lifecycleCancelBtn.addEventListener('click', async () => {
+        if (!state.lifecycleOrder || !state.lifecycleBuyer) return;
+        const orderId = state.lifecycleOrder.id;
+        hideBanner(el.lifecycleBanner);
+        el.lifecycleConfirmBtn.disabled = true;
+        el.lifecycleCancelBtn.disabled = true;
+
+        try {
+          const res = await apiFetch('/api/v1/orders/' + orderId + '/cancel', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + state.lifecycleBuyer.token }
+          });
+          if (!res.ok || !res.data) {
+            const detail = res.data && res.data.detail ? res.data.detail : 'HTTP ' + res.status;
+            throw new Error('Cancel failed: ' + detail);
+          }
+          await refreshAll();
+          renderLifecycleOrder(
+            res.data,
+            res.requestId,
+            'CANCELLED #' + orderId + ' -> reservedQty released back to sellableQty'
+          );
+          showBanner(el.lifecycleBanner, 'success', 'Order #' + orderId + ' CANCELLED. Reserved inventory and voucher restored.');
+        } catch (err) {
+          showBanner(el.lifecycleBanner, 'error', err.message);
+          renderLifecycleOrder(state.lifecycleOrder, null, null);
+        }
+      });
+
+      el.lifecycleExpireBtn.addEventListener('click', async () => {
+        hideBanner(el.lifecycleBanner);
+        el.lifecycleExpireBtn.disabled = true;
+
+        try {
+          const targetId = state.lifecycleOrder && state.lifecycleOrder.status === 'PENDING_PAYMENT'
+            ? state.lifecycleOrder.id
+            : null;
+          const query = targetId
+            ? '?includeActiveHolds=true&orderId=' + targetId
+            : '?includeActiveHolds=true';
+
+          const sweepRes = await authFetchWithRetry(
+            el.adminEmail.value.trim(),
+            el.adminPassword.value,
+            '/api/v1/admin/orders/expire-now' + query,
+            (token) => ({
+              method: 'POST',
+              headers: { 'Authorization': 'Bearer ' + token }
+            })
+          );
+          if (!sweepRes.ok || !sweepRes.data) {
+            const detail = sweepRes.data && sweepRes.data.detail ? sweepRes.data.detail : 'HTTP ' + sweepRes.status;
+            throw new Error('Expiry sweep failed: ' + detail);
+          }
+
+          let refreshedOrder = state.lifecycleOrder;
+          if (targetId && state.lifecycleBuyer) {
+            const getRes = await apiFetch('/api/v1/orders/' + targetId, {
+              headers: { 'Authorization': 'Bearer ' + state.lifecycleBuyer.token }
+            });
+            if (getRes.ok && getRes.data) {
+              refreshedOrder = getRes.data;
+            }
+          }
+
+          await refreshAll();
+          renderLifecycleOrder(
+            refreshedOrder,
+            sweepRes.requestId,
+            'EXPIRE SWEEP -> expiredCount=' + sweepRes.data.expiredCount +
+            (targetId ? ' (target #' + targetId + ' -> EXPIRED, reservedQty released)' : ' (all active holds)')
+          );
+          showBanner(
+            el.lifecycleBanner,
+            'success',
+            'Immediate TTL expiry sweep completed: expiredCount=' + sweepRes.data.expiredCount + '. Reserved stock & vouchers restored.'
+          );
+        } catch (err) {
+          showBanner(el.lifecycleBanner, 'error', err.message);
+        } finally {
+          el.lifecycleExpireBtn.disabled = false;
+        }
+      });
+
       el.skuSelect.addEventListener('change', () => {
         state.selectedProductId = Number(el.skuSelect.value || 1);
         updateActionLabels();
         renderProducts(state.products, null);
+      });
+      el.lifecycleSkuSelect.addEventListener('change', () => {
+        state.lifecycleProductId = Number(el.lifecycleSkuSelect.value || 1);
+        updateLifecycleStockSnapshot();
       });
       el.targetSellableInput.addEventListener('input', updateActionLabels);
       el.buyerCountInput.addEventListener('input', updateActionLabels);

@@ -51,6 +51,8 @@ public class VoucherController {
             @ApiResponse(responseCode = "404", description = "Voucher code not found",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class))),
             @ApiResponse(responseCode = "409", description = "Voucher inactive, already claimed by user, or quota exhausted",
+                    content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "429", description = "Per-actor token-bucket rate limit exceeded (includes Retry-After header)",
                     content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
     })
     public ResponseEntity<VoucherClaimResponse> claimVoucher(

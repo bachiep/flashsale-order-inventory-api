@@ -16,6 +16,7 @@ public class FlashSaleMetrics {
     private final Counter idempotentReplaysCounter;
     private final Counter vouchersClaimedCounter;
     private final Counter voucherQuotaConflictsCounter;
+    private final Counter rateLimitRejectedCounter;
     private final Clock clock;
 
     public FlashSaleMetrics(MeterRegistry meterRegistry, Clock clock) {
@@ -43,6 +44,9 @@ public class FlashSaleMetrics {
                 .register(meterRegistry);
         this.voucherQuotaConflictsCounter = Counter.builder("flashsale.vouchers.quota.conflicts")
                 .description("Total voucher claim attempts rejected due to exhausted quota")
+                .register(meterRegistry);
+        this.rateLimitRejectedCounter = Counter.builder("flashsale.ratelimit.rejected")
+                .description("Total burst mutation requests rejected with HTTP 429 Too Many Requests")
                 .register(meterRegistry);
     }
 
@@ -78,6 +82,10 @@ public class FlashSaleMetrics {
         voucherQuotaConflictsCounter.increment();
     }
 
+    public void recordRateLimitRejected() {
+        rateLimitRejectedCounter.increment();
+    }
+
     public MetricsSummaryResponse snapshot() {
         return new MetricsSummaryResponse(
                 Math.round(ordersReservedCounter.count()),
@@ -88,6 +96,7 @@ public class FlashSaleMetrics {
                 Math.round(idempotentReplaysCounter.count()),
                 Math.round(vouchersClaimedCounter.count()),
                 Math.round(voucherQuotaConflictsCounter.count()),
+                Math.round(rateLimitRejectedCounter.count()),
                 clock.instant()
         );
     }
