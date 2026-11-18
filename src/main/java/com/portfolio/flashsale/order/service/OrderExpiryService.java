@@ -2,6 +2,7 @@ package com.portfolio.flashsale.order.service;
 
 import com.portfolio.flashsale.catalog.service.CatalogService;
 import com.portfolio.flashsale.common.config.AppProperties;
+import com.portfolio.flashsale.common.observability.FlashSaleMetrics;
 import com.portfolio.flashsale.inventory.repository.InventoryItemRepository;
 import com.portfolio.flashsale.order.domain.Order;
 import com.portfolio.flashsale.order.domain.OrderItem;
@@ -28,6 +29,7 @@ public class OrderExpiryService {
     private final AppProperties appProperties;
     private final Clock clock;
     private final TransactionTemplate transactionTemplate;
+    private final FlashSaleMetrics flashSaleMetrics;
 
     public OrderExpiryService(
             OrderRepository orderRepository,
@@ -36,7 +38,8 @@ public class OrderExpiryService {
             CatalogService catalogService,
             AppProperties appProperties,
             Clock clock,
-            PlatformTransactionManager transactionManager
+            PlatformTransactionManager transactionManager,
+            FlashSaleMetrics flashSaleMetrics
     ) {
         this.orderRepository = orderRepository;
         this.inventoryItemRepository = inventoryItemRepository;
@@ -45,6 +48,7 @@ public class OrderExpiryService {
         this.appProperties = appProperties;
         this.clock = clock;
         this.transactionTemplate = new TransactionTemplate(transactionManager);
+        this.flashSaleMetrics = flashSaleMetrics;
     }
 
     public int expirePendingReservations() {
@@ -67,6 +71,7 @@ public class OrderExpiryService {
                 if (Boolean.TRUE.equals(expired)) {
                     expiredInBatch++;
                     totalExpired++;
+                    flashSaleMetrics.recordOrderExpired();
                 }
             }
 

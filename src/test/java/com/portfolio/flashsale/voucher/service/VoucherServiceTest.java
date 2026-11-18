@@ -10,7 +10,9 @@ import static org.mockito.Mockito.when;
 import com.portfolio.flashsale.auth.repository.UserRepository;
 import com.portfolio.flashsale.common.exception.BadRequestException;
 import com.portfolio.flashsale.common.exception.ConflictException;
+import com.portfolio.flashsale.common.observability.FlashSaleMetrics;
 import com.portfolio.flashsale.voucher.domain.DiscountType;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import com.portfolio.flashsale.voucher.domain.FlashVoucher;
 import com.portfolio.flashsale.voucher.dto.CreateVoucherRequest;
 import com.portfolio.flashsale.voucher.repository.FlashVoucherRepository;
@@ -41,11 +43,13 @@ class VoucherServiceTest {
 
     private VoucherService voucherService;
     private Clock clock;
+    private FlashSaleMetrics flashSaleMetrics;
 
     @BeforeEach
     void setUp() {
         clock = Clock.fixed(Instant.parse("2026-04-01T10:00:00Z"), ZoneOffset.UTC);
-        voucherService = new VoucherService(voucherRepository, claimRepository, userRepository, clock);
+        flashSaleMetrics = new FlashSaleMetrics(new SimpleMeterRegistry(), clock);
+        voucherService = new VoucherService(voucherRepository, claimRepository, userRepository, clock, flashSaleMetrics);
     }
 
     @Test

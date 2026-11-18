@@ -12,6 +12,7 @@ import com.portfolio.flashsale.common.dto.PagedResponse;
 import com.portfolio.flashsale.common.exception.ConflictException;
 import com.portfolio.flashsale.common.exception.ForbiddenException;
 import com.portfolio.flashsale.common.exception.ResourceNotFoundException;
+import com.portfolio.flashsale.common.observability.FlashSaleMetrics;
 import com.portfolio.flashsale.inventory.repository.InventoryItemRepository;
 import com.portfolio.flashsale.order.domain.IdempotencyRecord;
 import com.portfolio.flashsale.order.domain.Order;
@@ -53,6 +54,7 @@ public class OrderService {
     private final ObjectMapper objectMapper;
     private final AppProperties appProperties;
     private final Clock clock;
+    private final FlashSaleMetrics flashSaleMetrics;
 
     public OrderService(
             OrderRepository orderRepository,
@@ -65,7 +67,8 @@ public class OrderService {
             CatalogService catalogService,
             ObjectMapper objectMapper,
             AppProperties appProperties,
-            Clock clock
+            Clock clock,
+            FlashSaleMetrics flashSaleMetrics
     ) {
         this.orderRepository = orderRepository;
         this.idempotencyRecordRepository = idempotencyRecordRepository;
@@ -78,6 +81,7 @@ public class OrderService {
         this.objectMapper = objectMapper;
         this.appProperties = appProperties;
         this.clock = clock;
+        this.flashSaleMetrics = flashSaleMetrics;
     }
 
     @Transactional
@@ -109,6 +113,7 @@ public class OrderService {
             int qty = entry.getValue();
             int reservedRows = inventoryItemRepository.reserveStock(productId, qty, now);
             if (reservedRows == 0) {
+                flashSaleMetrics.recordOversellConflict();
                 Product product = productsById.get(productId);
                 throw new ConflictException(
                         "INSUFFICIENT_STOCK",
@@ -247,6 +252,7 @@ public class OrderService {
         }
 
         catalogService.evictAllCatalogCaches();
+        flashSaleMetrics.recordOrderConfirmed();
         return OrderResponse.from(orderRepository.findDetailedById(orderId).orElseThrow());
     }
 
@@ -279,6 +285,7 @@ public class OrderService {
         }
 
         catalogService.evictAllCatalogCaches();
+        flashSaleMetrics.recordOrderCancelled();
         return OrderResponse.from(orderRepository.findDetailedById(orderId).orElseThrow());
     }
 

@@ -1,6 +1,8 @@
 package com.portfolio.flashsale.common.api;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.Clock;
 import java.time.Instant;
@@ -29,6 +31,9 @@ public class HealthController {
 
     @GetMapping
     @Operation(summary = "Check API and database connectivity")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Service and database health status")
+    })
     public ResponseEntity<HealthResponse> health() {
         Integer dbProbe = jdbcTemplate.queryForObject("SELECT 1", Integer.class);
         String dbStatus = (dbProbe != null && dbProbe == 1) ? "UP" : "UNKNOWN";

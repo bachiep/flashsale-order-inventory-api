@@ -10,10 +10,16 @@ import com.portfolio.flashsale.order.service.OrderPlacementFacade;
 import com.portfolio.flashsale.order.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,6 +46,17 @@ public class OrderController {
 
     @PostMapping
     @Operation(summary = "Create an order with atomic inventory reservation and Idempotency-Key protection")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Order created or safely replayed from idempotency snapshot"),
+            @ApiResponse(responseCode = "400", description = "Missing Idempotency-Key or invalid request payload",
+                    content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "401", description = "Authentication required or JWT invalid",
+                    content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "404", description = "Referenced product or voucher not found",
+                    content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "409", description = "Insufficient sellable stock, idempotency payload mismatch, or voucher conflict",
+                    content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
+    })
     public ResponseEntity<OrderResponse> createOrder(
             @Parameter(description = "Unique client-generated idempotency key per checkout attempt", required = true)
             @RequestHeader("Idempotency-Key") String idempotencyKey,
@@ -54,6 +71,11 @@ public class OrderController {
 
     @GetMapping
     @Operation(summary = "List paginated orders belonging to the current user")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Paginated orders retrieved"),
+            @ApiResponse(responseCode = "401", description = "Authentication required or JWT invalid",
+                    content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
+    })
     public ResponseEntity<PagedResponse<OrderResponse>> listMyOrders(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
@@ -66,6 +88,17 @@ public class OrderController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get order details (owner or admin only)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Order details retrieved"),
+            @ApiResponse(responseCode = "400", description = "Invalid order ID format",
+                    content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "401", description = "Authentication required or JWT invalid",
+                    content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "403", description = "Order belongs to another customer",
+                    content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "404", description = "Order not found",
+                    content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
+    })
     public ResponseEntity<OrderResponse> getOrder(
             @PathVariable Long id,
             @AuthenticationPrincipal AuthenticatedUser currentUser
@@ -75,6 +108,17 @@ public class OrderController {
 
     @PostMapping("/{id}/confirm")
     @Operation(summary = "Confirm payment and permanently deduct reserved inventory")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Order payment confirmed and reserved stock permanently deducted"),
+            @ApiResponse(responseCode = "401", description = "Authentication required or JWT invalid",
+                    content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "403", description = "Order belongs to another customer",
+                    content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "404", description = "Order not found",
+                    content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "409", description = "Order not in PENDING_PAYMENT state or reservation TTL expired",
+                    content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
+    })
     public ResponseEntity<OrderResponse> confirmOrder(
             @PathVariable Long id,
             @AuthenticationPrincipal AuthenticatedUser currentUser
@@ -84,6 +128,17 @@ public class OrderController {
 
     @PostMapping("/{id}/cancel")
     @Operation(summary = "Cancel a pending order and release reserved inventory")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Order cancelled and reserved stock released"),
+            @ApiResponse(responseCode = "401", description = "Authentication required or JWT invalid",
+                    content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "403", description = "Order belongs to another customer",
+                    content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "404", description = "Order not found",
+                    content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "409", description = "Order cannot be cancelled from its current state",
+                    content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
+    })
     public ResponseEntity<OrderResponse> cancelOrder(
             @PathVariable Long id,
             @AuthenticationPrincipal AuthenticatedUser currentUser

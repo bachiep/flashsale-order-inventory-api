@@ -5,9 +5,15 @@ import com.portfolio.flashsale.voucher.dto.VoucherClaimResponse;
 import com.portfolio.flashsale.voucher.dto.VoucherResponse;
 import com.portfolio.flashsale.voucher.service.VoucherService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,12 +35,24 @@ public class VoucherController {
 
     @GetMapping("/active")
     @Operation(summary = "List currently active flash vouchers")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Active flash vouchers retrieved")
+    })
     public ResponseEntity<List<VoucherResponse>> listActiveVouchers() {
         return ResponseEntity.ok(voucherService.listActiveVouchers());
     }
 
     @PostMapping("/{code}/claim")
     @Operation(summary = "Atomically claim a flash voucher if quota remains")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Flash voucher claimed"),
+            @ApiResponse(responseCode = "401", description = "Authentication required or JWT invalid",
+                    content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "404", description = "Voucher code not found",
+                    content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "409", description = "Voucher inactive, already claimed by user, or quota exhausted",
+                    content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
+    })
     public ResponseEntity<VoucherClaimResponse> claimVoucher(
             @PathVariable String code,
             @AuthenticationPrincipal AuthenticatedUser currentUser
@@ -45,6 +63,11 @@ public class VoucherController {
 
     @GetMapping("/my-claims")
     @Operation(summary = "List flash vouchers claimed by the current user")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Current user voucher claims retrieved"),
+            @ApiResponse(responseCode = "401", description = "Authentication required or JWT invalid",
+                    content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
+    })
     public ResponseEntity<List<VoucherClaimResponse>> listMyClaims(
             @AuthenticationPrincipal AuthenticatedUser currentUser
     ) {

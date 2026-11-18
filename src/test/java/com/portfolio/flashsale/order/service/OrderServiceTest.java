@@ -17,7 +17,9 @@ import com.portfolio.flashsale.catalog.service.CatalogService;
 import com.portfolio.flashsale.common.config.AppProperties;
 import com.portfolio.flashsale.common.exception.ConflictException;
 import com.portfolio.flashsale.common.exception.ForbiddenException;
+import com.portfolio.flashsale.common.observability.FlashSaleMetrics;
 import com.portfolio.flashsale.inventory.repository.InventoryItemRepository;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import com.portfolio.flashsale.order.domain.Order;
 import com.portfolio.flashsale.order.domain.OrderStatus;
 import com.portfolio.flashsale.order.dto.OrderResponse;
@@ -71,6 +73,7 @@ class OrderServiceTest {
 
     private OrderService orderService;
     private Clock clock;
+    private FlashSaleMetrics flashSaleMetrics;
 
     @BeforeEach
     void setUp() {
@@ -82,6 +85,7 @@ class OrderServiceTest {
                 new AppProperties.Seed(false)
         );
         ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
+        flashSaleMetrics = new FlashSaleMetrics(new SimpleMeterRegistry(), clock);
         orderService = new OrderService(
                 orderRepository,
                 idempotencyRecordRepository,
@@ -93,7 +97,8 @@ class OrderServiceTest {
                 catalogService,
                 mapper,
                 props,
-                clock
+                clock,
+                flashSaleMetrics
         );
     }
 
@@ -160,6 +165,7 @@ class OrderServiceTest {
         assertThatThrownBy(() -> orderService.createOrderTransactionally(1L, "idem-2", "hash-2", quantities, null))
                 .isInstanceOf(ConflictException.class)
                 .hasMessageContaining("Insufficient available stock");
+        assertThat(flashSaleMetrics.snapshot().oversellConflicts()).isEqualTo(1L);
     }
 
     @Test

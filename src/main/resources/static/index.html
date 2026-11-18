@@ -1,0 +1,1655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FlashSale Order &amp; Inventory Console v2.0</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2322C55E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='13 2 3 14 12 14 11 22 21 10 12 10 13 2'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-canvas: #020617;
+      --bg-surface: #0F172A;
+      --bg-card: #0E1223;
+      --bg-elevated: #1E293B;
+      --border: #334155;
+      --border-subtle: #1E293B;
+      --text-primary: #F8FAFC;
+      --text-secondary: #CBD5E1;
+      --text-muted: #94A3B8;
+      --accent-green: #22C55E;
+      --accent-green-soft: rgba(34, 197, 94, 0.14);
+      --accent-cyan: #38BDF8;
+      --accent-cyan-soft: rgba(56, 189, 248, 0.14);
+      --accent-amber: #F59E0B;
+      --accent-amber-soft: rgba(245, 158, 11, 0.14);
+      --accent-red: #EF4444;
+      --accent-red-soft: rgba(239, 68, 68, 0.14);
+      --font-sans: 'Fira Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-mono: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --radius-lg: 12px;
+      --radius-md: 8px;
+      --radius-sm: 6px;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-canvas);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button, input, select {
+      font-family: inherit;
+      font-size: inherit;
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--accent-cyan);
+      outline-offset: 2px;
+    }
+
+    .app-shell {
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Header */
+    .top-bar {
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(14, 18, 35, 0.96));
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+      border-radius: var(--radius-md);
+      background: var(--accent-green-soft);
+      border: 1px solid rgba(34, 197, 94, 0.35);
+      color: var(--accent-green);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .brand-text {
+      min-width: 0;
+    }
+
+    .brand-title {
+      margin: 0;
+      font-size: clamp(1.05rem, 2vw, 1.35rem);
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text-primary);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-subtitle {
+      margin: 2px 0 0;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      border: 1px solid var(--border);
+      background: var(--bg-elevated);
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .pill-green {
+      background: var(--accent-green-soft);
+      border-color: rgba(34, 197, 94, 0.4);
+      color: var(--accent-green);
+    }
+
+    .pill-amber {
+      background: var(--accent-amber-soft);
+      border-color: rgba(245, 158, 11, 0.4);
+      color: var(--accent-amber);
+    }
+
+    .pill-red {
+      background: var(--accent-red-soft);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: var(--accent-red);
+    }
+
+    .pill-cyan {
+      background: var(--accent-cyan-soft);
+      border-color: rgba(56, 189, 248, 0.4);
+      color: var(--accent-cyan);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      display: inline-block;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background-color 180ms ease, border-color 180ms ease, transform 120ms ease, opacity 180ms ease;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    .btn:hover:not(:disabled) {
+      background: #273549;
+      border-color: #475569;
+    }
+
+    .btn:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    .btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: var(--accent-green);
+      border-color: var(--accent-green);
+      color: #020617;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #16A34A;
+      border-color: #16A34A;
+    }
+
+    .btn-cyan {
+      background: var(--accent-cyan-soft);
+      border-color: rgba(56, 189, 248, 0.45);
+      color: var(--accent-cyan);
+    }
+
+    .btn-cyan:hover:not(:disabled) {
+      background: rgba(56, 189, 248, 0.24);
+      border-color: var(--accent-cyan);
+    }
+
+    .btn-amber {
+      background: var(--accent-amber-soft);
+      border-color: rgba(245, 158, 11, 0.45);
+      color: var(--accent-amber);
+    }
+
+    .btn-amber:hover:not(:disabled) {
+      background: rgba(245, 158, 11, 0.24);
+      border-color: var(--accent-amber);
+    }
+
+    .btn-sm {
+      padding: 6px 10px;
+      font-size: 0.78rem;
+    }
+
+    /* Section & Cards */
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
+      min-width: 0;
+    }
+
+    .panel-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .panel-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+    }
+
+    .panel-title-wrap svg {
+      color: var(--accent-cyan);
+      flex-shrink: 0;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .panel-meta {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      word-break: break-all;
+    }
+
+    /* Telemetry KPI Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .metric-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .metric-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .metric-value {
+      font-family: var(--font-mono);
+      font-size: clamp(1.25rem, 2.2vw, 1.65rem);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-primary);
+    }
+
+    .metric-key {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: #64748B;
+      word-break: break-word;
+    }
+
+    .val-green { color: var(--accent-green); }
+    .val-cyan { color: var(--accent-cyan); }
+    .val-amber { color: var(--accent-amber); }
+    .val-red { color: var(--accent-red); }
+
+    /* Playground Layout */
+    .playground-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.85fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.75fr) minmax(0, 0.75fr);
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .field label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .input, .select {
+      width: 100%;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      padding: 8px 10px;
+      font-size: 0.86rem;
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      font-size: 0.84rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .checkbox-row input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent-green);
+      cursor: pointer;
+    }
+
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .creds-details {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 14px;
+    }
+
+    .creds-details summary {
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .creds-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    /* Summary Bar */
+    .verdict-strip {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .verdict-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      min-width: 0;
+    }
+
+    .verdict-box .v-label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .verdict-box .v-num {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 1rem;
+      font-variant-numeric: tabular-nums;
+      margin-top: 2px;
+    }
+
+    /* Tables */
+    .table-scroll {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      background: var(--bg-surface);
+    }
+
+    .table-scroll-y {
+      max-height: 310px;
+      overflow-y: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.82rem;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      background: #162033;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      vertical-align: middle;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr.row-selected {
+      background: rgba(56, 189, 248, 0.08);
+    }
+
+    .mono {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .progress-track {
+      width: 96px;
+      height: 7px;
+      border-radius: 999px;
+      background: #1E293B;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: var(--accent-green);
+      transition: width 220ms ease;
+    }
+
+    /* Idempotency Step Cards */
+    .idem-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .idem-step {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+    }
+
+    .idem-step-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .idem-step-title {
+      font-weight: 600;
+      font-size: 0.84rem;
+      color: var(--text-primary);
+    }
+
+    .idem-kv {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 14px;
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      word-break: break-all;
+    }
+
+    .code-box {
+      margin: 10px 0 0;
+      padding: 10px 12px;
+      background: #020617;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      color: #E2E8F0;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .voucher-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+    }
+
+    .voucher-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .voucher-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .voucher-code {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.98rem;
+      color: var(--accent-cyan);
+    }
+
+    .alert-banner {
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      font-size: 0.82rem;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .alert-banner.hidden {
+      display: none;
+    }
+
+    .alert-banner.success {
+      background: var(--accent-green-soft);
+      border-color: rgba(34, 197, 94, 0.4);
+      color: #DCFCE7;
+    }
+
+    .alert-banner.error {
+      background: var(--accent-red-soft);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: #FEE2E2;
+    }
+
+    .inventory-voucher-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.6fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    @media (max-width: 1080px) {
+      .playground-grid,
+      .inventory-voucher-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .verdict-strip {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 720px) {
+      .app-shell {
+        padding: 12px;
+        gap: 14px;
+      }
+      .panel, .top-bar {
+        padding: 14px;
+      }
+      .metrics-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .controls-grid,
+      .creds-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .verdict-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        transition: none !important;
+        animation: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Top Header -->
+    <header class="top-bar">
+      <div class="brand-group">
+        <div class="brand-icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1 class="brand-title">
+            <span>FlashSale Order &amp; Inventory Console v2.0</span>
+            <span id="healthBadge" class="pill pill-green">
+              <span class="status-dot" aria-hidden="true"></span>
+              <span id="healthText">Checking API...</span>
+            </span>
+          </h1>
+          <p class="brand-subtitle">
+            Atomic SQL Stock Reservation &middot; Idempotency-Key Snapshots &middot; Micrometer Telemetry &middot; X-Request-Id Correlation
+          </p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <a class="btn btn-sm" href="/swagger-ui/index.html" target="_blank" rel="noopener noreferrer">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+          </svg>
+          <span>Swagger UI</span>
+        </a>
+        <a class="btn btn-sm" href="/api/v1/metrics/summary" target="_blank" rel="noopener noreferrer">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+          <span>/api/v1/metrics/summary</span>
+        </a>
+        <button id="refreshBtn" class="btn btn-sm btn-cyan" type="button">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+          <span>Refresh Telemetry</span>
+        </button>
+        <button id="pollToggleBtn" class="btn btn-sm" type="button" aria-pressed="true">
+          <span>Auto-Poll: ON (5s)</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Live Micrometer Metrics Panel -->
+    <section class="panel" aria-labelledby="telemetry-heading">
+      <div class="panel-header">
+        <div class="panel-title-wrap">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+          </svg>
+          <h2 id="telemetry-heading" class="panel-title">Live Micrometer Telemetry</h2>
+        </div>
+        <div id="telemetryTimestamp" class="panel-meta">Snapshot: loading...</div>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <span class="metric-label">Orders Reserved</span>
+          <span id="mOrdersReserved" class="metric-value val-green">0</span>
+          <span class="metric-key">ordersReserved</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Orders Confirmed</span>
+          <span id="mOrdersConfirmed" class="metric-value val-cyan">0</span>
+          <span class="metric-key">ordersConfirmed</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Orders Cancelled</span>
+          <span id="mOrdersCancelled" class="metric-value">0</span>
+          <span class="metric-key">ordersCancelled</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Orders Expired</span>
+          <span id="mOrdersExpired" class="metric-value val-amber">0</span>
+          <span class="metric-key">ordersExpired</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Oversell Conflicts (409)</span>
+          <span id="mOversellConflicts" class="metric-value val-red">0</span>
+          <span class="metric-key">oversellConflicts</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Idempotent Replays</span>
+          <span id="mIdempotentReplays" class="metric-value val-amber">0</span>
+          <span class="metric-key">idempotentReplays</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Vouchers Claimed</span>
+          <span id="mVouchersClaimed" class="metric-value val-green">0</span>
+          <span class="metric-key">vouchersClaimed</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Voucher Quota Conflicts</span>
+          <span id="mVoucherQuotaConflicts" class="metric-value val-red">0</span>
+          <span class="metric-key">voucherQuotaConflicts</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Concurrency & Idempotency Playground -->
+    <section class="playground-grid" aria-label="Interactive Concurrency and Idempotency Playground">
+      <!-- Concurrency Burst Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            <h2 class="panel-title">Concurrent Checkout Contention Simulator</h2>
+          </div>
+          <span id="burstStatePill" class="pill">Idle</span>
+        </div>
+
+        <div id="burstBanner" class="alert-banner hidden" role="status"></div>
+
+        <div class="controls-grid">
+          <div class="field">
+            <label for="skuSelect">Target Flash-Sale SKU</label>
+            <select id="skuSelect" class="select"></select>
+          </div>
+          <div class="field">
+            <label for="targetSellableInput">Target Sellable Qty</label>
+            <input id="targetSellableInput" class="input mono" type="number" min="1" max="50" value="5" />
+          </div>
+          <div class="field">
+            <label for="buyerCountInput">Concurrent Buyers</label>
+            <input id="buyerCountInput" class="input mono" type="number" min="1" max="50" value="30" />
+          </div>
+        </div>
+
+        <label class="checkbox-row" for="autoPrepCheckbox">
+          <input id="autoPrepCheckbox" type="checkbox" checked />
+          <span>Auto-prep target SKU sellable stock via Admin PATCH before firing burst</span>
+        </label>
+
+        <details class="creds-details">
+          <summary>
+            <span>Seeded Demo Credentials (dev profile)</span>
+            <span class="mono" style="color: var(--accent-cyan);">admin + demo + demo2</span>
+          </summary>
+          <div class="creds-grid">
+            <div class="field">
+              <label for="adminEmail">Admin Email</label>
+              <input id="adminEmail" class="input mono" type="email" value="admin@flashsale.local" />
+            </div>
+            <div class="field">
+              <label for="adminPassword">Admin Password</label>
+              <input id="adminPassword" class="input mono" type="password" value="Admin@1234" />
+            </div>
+            <div class="field">
+              <label for="buyer1Email">Customer 1 Email</label>
+              <input id="buyer1Email" class="input mono" type="email" value="demo@flashsale.local" />
+            </div>
+            <div class="field">
+              <label for="buyer2Email">Customer 2 Email</label>
+              <input id="buyer2Email" class="input mono" type="email" value="demo2@flashsale.local" />
+            </div>
+            <div class="field">
+              <label for="buyerPassword">Customer Password</label>
+              <input id="buyerPassword" class="input mono" type="password" value="Demo@1234" />
+            </div>
+          </div>
+        </details>
+
+        <div class="action-row">
+          <button id="prepSkuBtn" class="btn btn-amber" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+            </svg>
+            <span id="prepSkuLabel">Prep Demo SKU (#1 -&gt; 5 sellable)</span>
+          </button>
+
+          <button id="fireBurstBtn" class="btn btn-primary" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            <span id="fireBurstLabel">Fire 30 Concurrent Buyers on Limited SKU</span>
+          </button>
+        </div>
+
+        <div class="verdict-strip">
+          <div class="verdict-box">
+            <div class="v-label">201 Created</div>
+            <div id="statCreated" class="v-num val-green">--</div>
+          </div>
+          <div class="verdict-box">
+            <div class="v-label">409 Conflict</div>
+            <div id="statConflicts" class="v-num val-red">--</div>
+          </div>
+          <div class="verdict-box">
+            <div class="v-label">Oversells</div>
+            <div id="statOversells" class="v-num val-green">--</div>
+          </div>
+          <div class="verdict-box">
+            <div class="v-label">p50 Latency</div>
+            <div id="statP50" class="v-num val-cyan">--</div>
+          </div>
+          <div class="verdict-box">
+            <div class="v-label">p95 Latency</div>
+            <div id="statP95" class="v-num val-cyan">--</div>
+          </div>
+          <div class="verdict-box">
+            <div class="v-label">Max Latency</div>
+            <div id="statMax" class="v-num">--</div>
+          </div>
+        </div>
+
+        <div class="table-scroll table-scroll-y">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Buyer</th>
+                <th>HTTP Status</th>
+                <th>Order ID / Error</th>
+                <th>X-Request-Id</th>
+                <th>X-Idempotency-Replayed</th>
+                <th>Latency</th>
+              </tr>
+            </thead>
+            <tbody id="burstLogBody">
+              <tr>
+                <td colspan="7" style="text-align:center; color: var(--text-muted); padding: 24px;">
+                  Click "Fire 30 Concurrent Buyers on Limited SKU" to execute parallel checkout requests against PostgreSQL-mode ACID stock locks.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Idempotency Replay & Payload Conflict Tester -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+            <h2 class="panel-title">Idempotency &amp; RFC 7807 Conflict Probe</h2>
+          </div>
+          <span id="idemStatePill" class="pill">Ready</span>
+        </div>
+
+        <p style="margin: 0 0 12px; color: var(--text-muted); font-size: 0.84rem;">
+          Verifies SHA-256 request canonicalization: sends one <span class="mono">Idempotency-Key</span> twice (proving safe snapshot replay without double-reserving stock), then mutates quantity under the same key (proving <span class="mono">409 Conflict</span> with <span class="mono">requestId</span>).
+        </p>
+
+        <div class="action-row">
+          <button id="testIdemBtn" class="btn btn-cyan" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <polyline points="17 1 21 5 17 9"></polyline>
+              <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+              <polyline points="7 23 3 19 7 15"></polyline>
+              <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+            </svg>
+            <span>Test Idempotency Replay &amp; Payload Conflict</span>
+          </button>
+        </div>
+
+        <div id="idemBanner" class="alert-banner hidden" role="status"></div>
+
+        <div id="idemSteps" class="idem-steps">
+          <div class="idem-step">
+            <div class="idem-step-head">
+              <span class="idem-step-title">Awaiting Probe Run</span>
+              <span class="pill">3 requests</span>
+            </div>
+            <div class="idem-kv">
+              <span>1. Create Order (qty=1) -&gt; 201 Created</span>
+              <span>2. Replay Same Key (qty=1) -&gt; 201 + X-Idempotency-Replayed: true</span>
+              <span>3. Mutate Payload (qty=2) -&gt; 409 Conflict ProblemDetail + requestId</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Live SKU Inventory & Active Vouchers -->
+    <section class="inventory-voucher-grid" aria-label="Live SKU Inventory and Flash Vouchers">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+            </svg>
+            <h2 class="panel-title">Live SKU Inventory &amp; Optimistic @Version</h2>
+          </div>
+          <span id="skuLastRequestId" class="panel-meta">X-Request-Id: --</span>
+        </div>
+
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>SKU</th>
+                <th>Product</th>
+                <th>Price</th>
+                <th>Available</th>
+                <th>Reserved</th>
+                <th>Sellable</th>
+                <th>@Version</th>
+                <th>Availability</th>
+              </tr>
+            </thead>
+            <tbody id="skuTableBody">
+              <tr>
+                <td colspan="9" style="text-align:center; color: var(--text-muted); padding: 20px;">Loading catalog...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+              <line x1="7" y1="7" x2="7.01" y2="7"></line>
+            </svg>
+            <h2 class="panel-title">Active Flash Vouchers</h2>
+          </div>
+          <span class="panel-meta">GET /api/v1/vouchers/active</span>
+        </div>
+
+        <div id="voucherList" class="voucher-grid">
+          <div class="voucher-card">
+            <span style="color: var(--text-muted);">Loading active campaigns...</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      const state = {
+        products: [],
+        vouchers: [],
+        selectedProductId: 1,
+        autoPoll: true,
+        pollHandle: null,
+        tokens: {}
+      };
+
+      const el = {
+        healthBadge: document.getElementById('healthBadge'),
+        healthText: document.getElementById('healthText'),
+        refreshBtn: document.getElementById('refreshBtn'),
+        pollToggleBtn: document.getElementById('pollToggleBtn'),
+        telemetryTimestamp: document.getElementById('telemetryTimestamp'),
+        mOrdersReserved: document.getElementById('mOrdersReserved'),
+        mOrdersConfirmed: document.getElementById('mOrdersConfirmed'),
+        mOrdersCancelled: document.getElementById('mOrdersCancelled'),
+        mOrdersExpired: document.getElementById('mOrdersExpired'),
+        mOversellConflicts: document.getElementById('mOversellConflicts'),
+        mIdempotentReplays: document.getElementById('mIdempotentReplays'),
+        mVouchersClaimed: document.getElementById('mVouchersClaimed'),
+        mVoucherQuotaConflicts: document.getElementById('mVoucherQuotaConflicts'),
+        skuSelect: document.getElementById('skuSelect'),
+        targetSellableInput: document.getElementById('targetSellableInput'),
+        buyerCountInput: document.getElementById('buyerCountInput'),
+        autoPrepCheckbox: document.getElementById('autoPrepCheckbox'),
+        adminEmail: document.getElementById('adminEmail'),
+        adminPassword: document.getElementById('adminPassword'),
+        buyer1Email: document.getElementById('buyer1Email'),
+        buyer2Email: document.getElementById('buyer2Email'),
+        buyerPassword: document.getElementById('buyerPassword'),
+        prepSkuBtn: document.getElementById('prepSkuBtn'),
+        prepSkuLabel: document.getElementById('prepSkuLabel'),
+        fireBurstBtn: document.getElementById('fireBurstBtn'),
+        fireBurstLabel: document.getElementById('fireBurstLabel'),
+        burstStatePill: document.getElementById('burstStatePill'),
+        burstBanner: document.getElementById('burstBanner'),
+        statCreated: document.getElementById('statCreated'),
+        statConflicts: document.getElementById('statConflicts'),
+        statOversells: document.getElementById('statOversells'),
+        statP50: document.getElementById('statP50'),
+        statP95: document.getElementById('statP95'),
+        statMax: document.getElementById('statMax'),
+        burstLogBody: document.getElementById('burstLogBody'),
+        testIdemBtn: document.getElementById('testIdemBtn'),
+        idemStatePill: document.getElementById('idemStatePill'),
+        idemBanner: document.getElementById('idemBanner'),
+        idemSteps: document.getElementById('idemSteps'),
+        skuLastRequestId: document.getElementById('skuLastRequestId'),
+        skuTableBody: document.getElementById('skuTableBody'),
+        voucherList: document.getElementById('voucherList')
+      };
+
+      function escapeHtml(str) {
+        return String(str ?? '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function showBanner(node, type, message) {
+        node.className = 'alert-banner ' + type;
+        node.textContent = message;
+      }
+
+      function hideBanner(node) {
+        node.className = 'alert-banner hidden';
+        node.textContent = '';
+      }
+
+      function percentile(sorted, p) {
+        if (!sorted.length) return 0;
+        const idx = Math.ceil((p / 100) * sorted.length) - 1;
+        return sorted[Math.max(0, Math.min(idx, sorted.length - 1))];
+      }
+
+      function updateActionLabels() {
+        const skuId = Number(el.skuSelect.value || state.selectedProductId || 1);
+        const qty = Math.max(1, Math.min(50, Number(el.targetSellableInput.value || 5)));
+        const buyers = Math.max(1, Math.min(50, Number(el.buyerCountInput.value || 30)));
+        el.prepSkuLabel.textContent = 'Prep Demo SKU (#' + skuId + ' -> ' + qty + ' sellable)';
+        el.fireBurstLabel.textContent = 'Fire ' + buyers + ' Concurrent Buyers on Limited SKU';
+      }
+
+      async function apiFetch(url, options = {}) {
+        const started = performance.now();
+        const res = await fetch(url, options);
+        const latencyMs = performance.now() - started;
+        const requestId = res.headers.get('X-Request-Id') || '';
+        const replayed = res.headers.get('X-Idempotency-Replayed');
+        const text = await res.text();
+        let data = null;
+        if (text) {
+          try {
+            data = JSON.parse(text);
+          } catch (_) {
+            data = text;
+          }
+        }
+        return { ok: res.ok, status: res.status, data, requestId, replayed, latencyMs };
+      }
+
+      async function login(email, password) {
+        const key = email + '::' + password;
+        if (state.tokens[key]) {
+          return state.tokens[key];
+        }
+        const res = await apiFetch('/api/v1/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        if (!res.ok || !res.data || !res.data.accessToken) {
+          const detail = res.data && res.data.detail ? res.data.detail : 'HTTP ' + res.status;
+          throw new Error('Auth failed for ' + email + ': ' + detail);
+        }
+        state.tokens[key] = res.data.accessToken;
+        return res.data.accessToken;
+      }
+
+      async function authFetchWithRetry(email, password, url, buildInit) {
+        let token = await login(email, password);
+        let res = await apiFetch(url, buildInit(token));
+        if (res.status === 401) {
+          delete state.tokens[email + '::' + password];
+          token = await login(email, password);
+          res = await apiFetch(url, buildInit(token));
+        }
+        return res;
+      }
+
+      async function fetchHealth() {
+        try {
+          const res = await apiFetch('/api/v1/health');
+          if (res.ok && res.data && res.data.status === 'UP') {
+            el.healthBadge.className = 'pill pill-green';
+            el.healthText.textContent = 'UP (' + (res.data.profiles || []).join(',') + ' / DB ' + res.data.database + ')';
+          } else {
+            el.healthBadge.className = 'pill pill-red';
+            el.healthText.textContent = 'Degraded (' + res.status + ')';
+          }
+        } catch (err) {
+          el.healthBadge.className = 'pill pill-red';
+          el.healthText.textContent = 'Offline';
+        }
+      }
+
+      async function fetchMetricsSummary() {
+        const res = await apiFetch('/api/v1/metrics/summary');
+        if (!res.ok || !res.data) return;
+        const m = res.data;
+        el.mOrdersReserved.textContent = m.ordersReserved;
+        el.mOrdersConfirmed.textContent = m.ordersConfirmed;
+        el.mOrdersCancelled.textContent = m.ordersCancelled;
+        el.mOrdersExpired.textContent = m.ordersExpired;
+        el.mOversellConflicts.textContent = m.oversellConflicts;
+        el.mIdempotentReplays.textContent = m.idempotentReplays;
+        el.mVouchersClaimed.textContent = m.vouchersClaimed;
+        el.mVoucherQuotaConflicts.textContent = m.voucherQuotaConflicts;
+        el.telemetryTimestamp.textContent = 'Snapshot: ' + m.timestamp + (res.requestId ? ' | X-Request-Id: ' + res.requestId : '');
+      }
+
+      function renderProducts(products, requestId) {
+        state.products = products;
+        if (requestId) {
+          el.skuLastRequestId.textContent = 'X-Request-Id: ' + requestId;
+        }
+
+        const prevSelected = Number(el.skuSelect.value || state.selectedProductId || 1);
+        const hasPrev = products.some(p => p.id === prevSelected);
+        state.selectedProductId = hasPrev ? prevSelected : (products[0] ? products[0].id : 1);
+
+        el.skuSelect.innerHTML = products.map(p => (
+          '<option value="' + p.id + '"' + (p.id === state.selectedProductId ? ' selected' : '') + '>' +
+          '#' + p.id + ' ' + escapeHtml(p.sku) + ' - ' + escapeHtml(p.name) +
+          ' (sellable: ' + p.sellableQty + ', v' + p.inventoryVersion + ')' +
+          '</option>'
+        )).join('');
+        updateActionLabels();
+
+        if (!products.length) {
+          el.skuTableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:20px;">No active products found.</td></tr>';
+          return;
+        }
+
+        el.skuTableBody.innerHTML = products.map(p => {
+          const ratio = p.availableQty > 0 ? Math.round((p.sellableQty / p.availableQty) * 100) : 0;
+          const barColor = p.sellableQty === 0 ? 'var(--accent-red)' : (ratio <= 25 ? 'var(--accent-amber)' : 'var(--accent-green)');
+          const sellableClass = p.sellableQty === 0 ? 'val-red' : (p.sellableQty <= 5 ? 'val-amber' : 'val-green');
+          return (
+            '<tr data-sku-id="' + p.id + '" class="' + (p.id === state.selectedProductId ? 'row-selected' : '') + '" style="cursor:pointer;">' +
+              '<td class="mono">#' + p.id + '</td>' +
+              '<td class="mono" style="color:var(--accent-cyan);">' + escapeHtml(p.sku) + '</td>' +
+              '<td style="font-weight:500;color:var(--text-primary);">' + escapeHtml(p.name) + '</td>' +
+              '<td class="mono">$' + Number(p.price).toFixed(2) + '</td>' +
+              '<td class="mono">' + p.availableQty + '</td>' +
+              '<td class="mono val-amber">' + p.reservedQty + '</td>' +
+              '<td class="mono ' + sellableClass + '" style="font-weight:700;">' + p.sellableQty + '</td>' +
+              '<td class="mono">v' + p.inventoryVersion + '</td>' +
+              '<td>' +
+                '<div style="display:flex;align-items:center;gap:8px;">' +
+                  '<div class="progress-track"><div class="progress-fill" style="width:' + ratio + '%;background:' + barColor + ';"></div></div>' +
+                  '<span class="mono" style="font-size:0.72rem;color:var(--text-muted);">' + ratio + '%</span>' +
+                '</div>' +
+              '</td>' +
+            '</tr>'
+          );
+        }).join('');
+      }
+
+      async function fetchProducts() {
+        const res = await apiFetch('/api/v1/products?size=20&sort=id,asc');
+        if (res.ok && res.data && Array.isArray(res.data.items)) {
+          renderProducts(res.data.items, res.requestId);
+        }
+      }
+
+      function renderVouchers(vouchers) {
+        state.vouchers = vouchers;
+        if (!vouchers.length) {
+          el.voucherList.innerHTML = '<div class="voucher-card"><span style="color:var(--text-muted);">No active flash vouchers in the current window.</span></div>';
+          return;
+        }
+        el.voucherList.innerHTML = vouchers.map(v => {
+          const pct = v.maxRedemptions > 0 ? Math.min(100, Math.round((v.claimedCount / v.maxRedemptions) * 100)) : 0;
+          const discountLabel = v.discountType === 'PERCENTAGE'
+            ? Number(v.discountValue) + '% OFF'
+            : '$' + Number(v.discountValue).toFixed(2) + ' OFF';
+          return (
+            '<div class="voucher-card">' +
+              '<div class="voucher-head">' +
+                '<span class="voucher-code">' + escapeHtml(v.code) + '</span>' +
+                '<span class="pill pill-green">' + escapeHtml(discountLabel) + '</span>' +
+              '</div>' +
+              '<div class="mono" style="color:var(--text-secondary);">Claimed: <strong>' + v.claimedCount + ' / ' + v.maxRedemptions + '</strong> (' + (v.remainingQuota ?? (v.maxRedemptions - v.claimedCount)) + ' remaining)</div>' +
+              '<div class="progress-track" style="width:100%;"><div class="progress-fill" style="width:' + pct + '%;background:var(--accent-cyan);"></div></div>' +
+              '<div class="mono" style="color:var(--text-muted);font-size:0.74rem;">Min Order: $' + Number(v.minOrderAmount).toFixed(2) + '</div>' +
+            '</div>'
+          );
+        }).join('');
+      }
+
+      async function fetchVouchers() {
+        const res = await apiFetch('/api/v1/vouchers/active');
+        if (res.ok && Array.isArray(res.data)) {
+          renderVouchers(res.data);
+        }
+      }
+
+      async function refreshAll() {
+        await Promise.all([
+          fetchHealth(),
+          fetchMetricsSummary(),
+          fetchProducts(),
+          fetchVouchers()
+        ]);
+      }
+
+      async function prepSkuSellableQty(productId, targetSellable) {
+        const currentRes = await apiFetch('/api/v1/products/' + productId);
+        if (!currentRes.ok || !currentRes.data) {
+          throw new Error('Failed to load SKU #' + productId + ' (HTTP ' + currentRes.status + ')');
+        }
+        const current = currentRes.data;
+        const desiredAvailable = current.reservedQty + targetSellable;
+
+        const patchRes = await authFetchWithRetry(
+          el.adminEmail.value.trim(),
+          el.adminPassword.value,
+          '/api/v1/admin/products/' + productId + '/inventory',
+          (token) => ({
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({
+              availableQty: desiredAvailable,
+              expectedVersion: current.inventoryVersion
+            })
+          })
+        );
+
+        if (!patchRes.ok || !patchRes.data) {
+          const detail = patchRes.data && patchRes.data.detail ? patchRes.data.detail : 'HTTP ' + patchRes.status;
+          throw new Error('Admin inventory PATCH failed: ' + detail);
+        }
+        return patchRes;
+      }
+
+      function setBurstBusy(busy, label) {
+        el.prepSkuBtn.disabled = busy;
+        el.fireBurstBtn.disabled = busy;
+        el.testIdemBtn.disabled = busy;
+        el.burstStatePill.className = busy ? 'pill pill-amber' : 'pill pill-green';
+        el.burstStatePill.textContent = label;
+      }
+
+      el.prepSkuBtn.addEventListener('click', async () => {
+        const skuId = Number(el.skuSelect.value || state.selectedProductId || 1);
+        const targetSellable = Math.max(1, Math.min(50, Number(el.targetSellableInput.value || 5)));
+        hideBanner(el.burstBanner);
+        setBurstBusy(true, 'Prepping SKU...');
+        try {
+          const res = await prepSkuSellableQty(skuId, targetSellable);
+          await refreshAll();
+          el.burstStatePill.className = 'pill pill-green';
+          el.burstStatePill.textContent = 'SKU Prepped';
+          showBanner(
+            el.burstBanner,
+            'success',
+            'Prepped #' + skuId + ' (' + res.data.sku + '): availableQty=' + res.data.availableQty +
+            ', reservedQty=' + res.data.reservedQty + ', sellableQty=' + res.data.sellableQty +
+            ', @Version=v' + res.data.inventoryVersion + ' (X-Request-Id: ' + res.requestId + ')'
+          );
+        } catch (err) {
+          el.burstStatePill.className = 'pill pill-red';
+          el.burstStatePill.textContent = 'Error';
+          showBanner(el.burstBanner, 'error', err.message);
+        } finally {
+          el.prepSkuBtn.disabled = false;
+          el.fireBurstBtn.disabled = false;
+          el.testIdemBtn.disabled = false;
+        }
+      });
+
+      el.fireBurstBtn.addEventListener('click', async () => {
+        const skuId = Number(el.skuSelect.value || state.selectedProductId || 1);
+        const targetSellable = Math.max(1, Math.min(50, Number(el.targetSellableInput.value || 5)));
+        const buyerCount = Math.max(1, Math.min(50, Number(el.buyerCountInput.value || 30)));
+        hideBanner(el.burstBanner);
+        setBurstBusy(true, 'Running ' + buyerCount + 'x Burst...');
+
+        try {
+          if (el.autoPrepCheckbox.checked) {
+            await prepSkuSellableQty(skuId, targetSellable);
+          }
+
+          const beforeRes = await apiFetch('/api/v1/products/' + skuId);
+          if (!beforeRes.ok || !beforeRes.data) {
+            throw new Error('Could not read SKU #' + skuId + ' before burst');
+          }
+          const beforeProduct = beforeRes.data;
+
+          const buyer1Email = el.buyer1Email.value.trim();
+          const buyer2Email = el.buyer2Email.value.trim();
+          const buyerPass = el.buyerPassword.value;
+
+          const [token1, token2] = await Promise.all([
+            login(buyer1Email, buyerPass),
+            login(buyer2Email, buyerPass)
+          ]);
+
+          const burstId = Date.now().toString(36);
+          const tasks = Array.from({ length: buyerCount }, (_, idx) => {
+            const useSecond = idx % 2 === 1;
+            const buyerLabel = useSecond ? 'demo2' : 'demo';
+            const token = useSecond ? token2 : token1;
+            const idemKey = 'ui-burst-' + burstId + '-' + (idx + 1);
+            return apiFetch('/api/v1/orders', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token,
+                'Idempotency-Key': idemKey
+              },
+              body: JSON.stringify({ items: [{ productId: skuId, quantity: 1 }] })
+            }).then((res) => ({ index: idx + 1, buyerLabel, ...res }));
+          });
+
+          const results = await Promise.all(tasks);
+          const afterRes = await apiFetch('/api/v1/products/' + skuId);
+          const afterProduct = afterRes.data;
+
+          const createdCount = results.filter(r => r.status === 201).length;
+          const conflictCount = results.filter(r => r.status === 409).length;
+          const otherCount = results.length - createdCount - conflictCount;
+          const reservedDelta = afterProduct ? (afterProduct.reservedQty - beforeProduct.reservedQty) : createdCount;
+          const oversells = Math.max(0, createdCount - beforeProduct.sellableQty) +
+            (afterProduct && afterProduct.sellableQty < 0 ? Math.abs(afterProduct.sellableQty) : 0) +
+            (reservedDelta !== createdCount ? Math.abs(reservedDelta - createdCount) : 0);
+
+          const latencies = results.map(r => r.latencyMs).sort((a, b) => a - b);
+          const p50 = percentile(latencies, 50);
+          const p95 = percentile(latencies, 95);
+          const max = latencies.length ? latencies[latencies.length - 1] : 0;
+
+          el.statCreated.textContent = String(createdCount);
+          el.statConflicts.textContent = String(conflictCount);
+          el.statOversells.textContent = String(oversells);
+          el.statOversells.className = 'v-num ' + (oversells === 0 ? 'val-green' : 'val-red');
+          el.statP50.textContent = p50.toFixed(1) + ' ms';
+          el.statP95.textContent = p95.toFixed(1) + ' ms';
+          el.statMax.textContent = max.toFixed(1) + ' ms';
+
+          el.burstLogBody.innerHTML = results.map(r => {
+            const statusPill = r.status === 201
+              ? '<span class="pill pill-green">201 Created</span>'
+              : (r.status === 409
+                ? '<span class="pill pill-red">409 Conflict</span>'
+                : '<span class="pill pill-amber">' + r.status + '</span>');
+            const detailCol = r.status === 201 && r.data
+              ? '#' + r.data.id + ' (' + escapeHtml(r.data.orderNumber) + ')'
+              : (r.data && r.data.errorCode ? escapeHtml(r.data.errorCode) : 'HTTP ' + r.status);
+            return (
+              '<tr>' +
+                '<td class="mono">' + r.index + '</td>' +
+                '<td class="mono">' + escapeHtml(r.buyerLabel) + '</td>' +
+                '<td>' + statusPill + '</td>' +
+                '<td class="mono">' + detailCol + '</td>' +
+                '<td class="mono" style="color:var(--accent-cyan);">' + escapeHtml(r.requestId || '-') + '</td>' +
+                '<td class="mono">' + escapeHtml(r.replayed ?? '-') + '</td>' +
+                '<td class="mono">' + r.latencyMs.toFixed(1) + ' ms</td>' +
+              '</tr>'
+            );
+          }).join('');
+
+          await refreshAll();
+
+          el.burstStatePill.className = (oversells === 0 && otherCount === 0) ? 'pill pill-green' : 'pill pill-red';
+          el.burstStatePill.textContent = oversells + ' Oversells';
+          showBanner(
+            el.burstBanner,
+            (oversells === 0 && otherCount === 0) ? 'success' : 'error',
+            'Burst complete on ' + beforeProduct.sku + ' (initial sellable=' + beforeProduct.sellableQty + '): ' +
+            createdCount + ' x 201 Created, ' + conflictCount + ' x 409 Conflict, ' + oversells + ' oversells. ' +
+            'Post-burst sellableQty=' + (afterProduct ? afterProduct.sellableQty : '?') + '.'
+          );
+        } catch (err) {
+          el.burstStatePill.className = 'pill pill-red';
+          el.burstStatePill.textContent = 'Failed';
+          showBanner(el.burstBanner, 'error', err.message);
+        } finally {
+          el.prepSkuBtn.disabled = false;
+          el.fireBurstBtn.disabled = false;
+          el.testIdemBtn.disabled = false;
+        }
+      });
+
+      el.testIdemBtn.addEventListener('click', async () => {
+        const skuId = Number(el.skuSelect.value || state.selectedProductId || 1);
+        hideBanner(el.idemBanner);
+        el.testIdemBtn.disabled = true;
+        el.prepSkuBtn.disabled = true;
+        el.fireBurstBtn.disabled = true;
+        el.idemStatePill.className = 'pill pill-amber';
+        el.idemStatePill.textContent = 'Probing...';
+
+        try {
+          const checkRes = await apiFetch('/api/v1/products/' + skuId);
+          if (!checkRes.ok || !checkRes.data) {
+            throw new Error('Failed to inspect SKU #' + skuId);
+          }
+          if (checkRes.data.sellableQty < 2) {
+            await prepSkuSellableQty(skuId, 3);
+          }
+
+          const idemKey = 'ui-idem-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+          const buyerEmail = el.buyer1Email.value.trim();
+          const buyerPass = el.buyerPassword.value;
+
+          // Step 1: First checkout (qty = 1)
+          const step1 = await authFetchWithRetry(buyerEmail, buyerPass, '/api/v1/orders', (token) => ({
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + token,
+              'Idempotency-Key': idemKey
+            },
+            body: JSON.stringify({ items: [{ productId: skuId, quantity: 1 }] })
+          }));
+
+          // Step 2: Identical retry (qty = 1, same Idempotency-Key)
+          const step2 = await authFetchWithRetry(buyerEmail, buyerPass, '/api/v1/orders', (token) => ({
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + token,
+              'Idempotency-Key': idemKey
+            },
+            body: JSON.stringify({ items: [{ productId: skuId, quantity: 1 }] })
+          }));
+
+          // Step 3: Conflicting payload (qty = 2, same Idempotency-Key)
+          const step3 = await authFetchWithRetry(buyerEmail, buyerPass, '/api/v1/orders', (token) => ({
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + token,
+              'Idempotency-Key': idemKey
+            },
+            body: JSON.stringify({ items: [{ productId: skuId, quantity: 2 }] })
+          }));
+
+          const sameOrder = step1.data && step2.data && step1.data.id === step2.data.id;
+          const replayHeaderValid = step2.status === 201 && step2.replayed === 'true' && sameOrder;
+          const conflictValid = step3.status === 409 && step3.data && step3.data.errorCode === 'IDEMPOTENCY_KEY_CONFLICT';
+
+          el.idemSteps.innerHTML =
+            '<div class="idem-step">' +
+              '<div class="idem-step-head">' +
+                '<span class="idem-step-title">1. Initial Checkout (qty=1)</span>' +
+                '<span class="pill ' + (step1.status === 201 ? 'pill-green' : 'pill-red') + '">' + step1.status + '</span>' +
+              '</div>' +
+              '<div class="idem-kv">' +
+                '<span>Key: ' + escapeHtml(idemKey) + '</span>' +
+                '<span>Order: #' + escapeHtml(step1.data && step1.data.id) + ' (' + escapeHtml(step1.data && step1.data.orderNumber) + ')</span>' +
+                '<span>X-Idempotency-Replayed: ' + escapeHtml(step1.replayed) + '</span>' +
+                '<span>X-Request-Id: ' + escapeHtml(step1.requestId) + '</span>' +
+              '</div>' +
+            '</div>' +
+            '<div class="idem-step">' +
+              '<div class="idem-step-head">' +
+                '<span class="idem-step-title">2. Duplicate Retry (same key &amp; qty=1)</span>' +
+                '<span class="pill ' + (replayHeaderValid ? 'pill-amber' : 'pill-red') + '">' + step2.status + ' (Replayed: ' + escapeHtml(step2.replayed) + ')</span>' +
+              '</div>' +
+              '<div class="idem-kv">' +
+                '<span>Order ID Match: ' + (sameOrder ? 'YES (#' + escapeHtml(step2.data && step2.data.id) + ')' : 'NO') + '</span>' +
+                '<span>X-Request-Id: ' + escapeHtml(step2.requestId) + '</span>' +
+              '</div>' +
+            '</div>' +
+            '<div class="idem-step">' +
+              '<div class="idem-step-head">' +
+                '<span class="idem-step-title">3. Altered Payload (same key, qty=2)</span>' +
+                '<span class="pill ' + (conflictValid ? 'pill-red' : 'pill-amber') + '">' + step3.status + ' Conflict</span>' +
+              '</div>' +
+              '<div class="idem-kv">' +
+                '<span>X-Request-Id Header: ' + escapeHtml(step3.requestId) + '</span>' +
+                '<span>ProblemDetail.requestId: ' + escapeHtml(step3.data && step3.data.requestId) + '</span>' +
+              '</div>' +
+              '<pre class="code-box">' + escapeHtml(JSON.stringify(step3.data, null, 2)) + '</pre>' +
+            '</div>';
+
+          await refreshAll();
+
+          if (replayHeaderValid && conflictValid) {
+            el.idemStatePill.className = 'pill pill-green';
+            el.idemStatePill.textContent = 'Verified';
+            showBanner(
+              el.idemBanner,
+              'success',
+              'Idempotency verified: Replay returned identical order #' + step1.data.id +
+              ' (X-Idempotency-Replayed: true), and tampered payload returned 409 IDEMPOTENCY_KEY_CONFLICT with matching requestId.'
+            );
+          } else {
+            el.idemStatePill.className = 'pill pill-red';
+            el.idemStatePill.textContent = 'Unexpected';
+            showBanner(el.idemBanner, 'error', 'Idempotency assertions did not all match expected statuses.');
+          }
+        } catch (err) {
+          el.idemStatePill.className = 'pill pill-red';
+          el.idemStatePill.textContent = 'Error';
+          showBanner(el.idemBanner, 'error', err.message);
+        } finally {
+          el.testIdemBtn.disabled = false;
+          el.prepSkuBtn.disabled = false;
+          el.fireBurstBtn.disabled = false;
+        }
+      });
+
+      el.skuSelect.addEventListener('change', () => {
+        state.selectedProductId = Number(el.skuSelect.value || 1);
+        updateActionLabels();
+        renderProducts(state.products, null);
+      });
+      el.targetSellableInput.addEventListener('input', updateActionLabels);
+      el.buyerCountInput.addEventListener('input', updateActionLabels);
+
+      el.skuTableBody.addEventListener('click', (evt) => {
+        const row = evt.target.closest('tr[data-sku-id]');
+        if (!row) return;
+        state.selectedProductId = Number(row.getAttribute('data-sku-id'));
+        el.skuSelect.value = String(state.selectedProductId);
+        updateActionLabels();
+        renderProducts(state.products, null);
+      });
+
+      el.refreshBtn.addEventListener('click', refreshAll);
+
+      el.pollToggleBtn.addEventListener('click', () => {
+        state.autoPoll = !state.autoPoll;
+        el.pollToggleBtn.setAttribute('aria-pressed', String(state.autoPoll));
+        el.pollToggleBtn.innerHTML = '<span>Auto-Poll: ' + (state.autoPoll ? 'ON (5s)' : 'PAUSED') + '</span>';
+        if (state.autoPoll) {
+          startAutoPoll();
+        } else if (state.pollHandle) {
+          clearInterval(state.pollHandle);
+          state.pollHandle = null;
+        }
+      });
+
+      function startAutoPoll() {
+        if (state.pollHandle) clearInterval(state.pollHandle);
+        state.pollHandle = setInterval(() => {
+          if (state.autoPoll && !el.fireBurstBtn.disabled) {
+            refreshAll().catch(() => {});
+          }
+        }, 5000);
+      }
+
+      refreshAll().catch(() => {});
+      startAutoPoll();
+    })();
+  </script>
+</body>
+</html>

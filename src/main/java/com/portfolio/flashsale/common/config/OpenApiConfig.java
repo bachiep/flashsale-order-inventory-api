@@ -18,8 +18,8 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("Flash-Sale Order & Inventory API")
-                        .version("v1")
-                        .description("RESTful backend API for flash-sale product catalog, limited-quota vouchers, atomic inventory reservation, and idempotent order checkout."))
+                        .version("v2.0")
+                        .description("RESTful backend API for flash-sale product catalog, limited-quota vouchers, atomic inventory reservation, idempotent order checkout, Micrometer observability, and X-Request-Id correlation tracing."))
                 .addSecurityItem(new SecurityRequirement().addList(BEARER_AUTH_SCHEME))
                 .components(new Components().addSecuritySchemes(
                         BEARER_AUTH_SCHEME,
