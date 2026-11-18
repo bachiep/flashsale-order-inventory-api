@@ -22,3 +22,33 @@ jobs:
 
       - name: Run verification suite
         run: chmod +x mvnw && ./mvnw -B verify
+
+  docker-smoke:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate Compose configuration
+        run: docker compose config -q
+
+      - name: Start Postgres, Redis, and API containers
+        run: docker compose up -d --build
+
+      - name: Verify API health and Postgres/Redis integration
+        run: |
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8101/api/v1/health | grep -q '"status":"UP"'; then
+              break
+            fi
+            sleep 3
+          done
+          curl -fsS http://127.0.0.1:8101/api/v1/health | grep -q '"status":"UP"'
+          curl -fsS http://127.0.0.1:8101/api/v1/products | grep -q '"items"'
+
+      - name: Tear down Compose stack
+        if: always()
+        run: |
+          docker compose logs api || true
+          docker compose down -v --remove-orphans
