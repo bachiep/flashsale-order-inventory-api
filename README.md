@@ -2,11 +2,13 @@
 
 > **One-sentence pitch:** A concurrency-safe RESTful backend API built with Java 21 and Spring Boot 3.4 that handles flash-sale product browsing, limited-quota vouchers, idempotent order checkout, and TTL-based inventory reservations without overselling.
 
+[![CI](https://github.com/bachiep/flashsale-order-inventory-api/actions/workflows/ci.yml/badge.svg)](https://github.com/bachiep/flashsale-order-inventory-api/actions/workflows/ci.yml)
 ![Java 21](https://img.shields.io/badge/Java-21%20LTS-007396?style=flat-square&logo=openjdk&logoColor=white)
 ![Spring Boot 3.4](https://img.shields.io/badge/Spring%20Boot-3.4.13-6DB33F?style=flat-square&logo=springboot&logoColor=white)
 ![Flyway](https://img.shields.io/badge/Migrations-Flyway-CC0200?style=flat-square)
 ![PostgreSQL 16](https://img.shields.io/badge/Database-H2%20%2F%20PostgreSQL%2016-4169E1?style=flat-square&logo=postgresql&logoColor=white)
 ![Cache](https://img.shields.io/badge/Cache-Caffeine%20%2F%20Redis%207-DC382D?style=flat-square)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
 
@@ -154,6 +156,15 @@ curl -i -X POST http://localhost:8101/api/v1/orders \
 curl -s -X POST http://localhost:8101/api/v1/orders/1/confirm \
   -H "Authorization: Bearer $TOKEN"
 ```
+
+### Interactive API Preview & 1-Click Collections
+
+- **VS Code / IntelliJ HTTP Client:** [`docs/api-requests.http`](docs/api-requests.http)
+- **Postman Collection v2.1:** [`docs/postman_collection.json`](docs/postman_collection.json) (auto-captures JWT tokens and replays `Idempotency-Key` requests)
+
+| Live Paginated Catalog (`GET /api/v1/products`) | Idempotent Checkout Schema (`POST /api/v1/orders`) |
+| :---: | :---: |
+| ![Swagger Live Catalog Response](docs/screenshots/swagger-catalog-live.png) | ![Swagger Idempotent Checkout Schema](docs/screenshots/swagger-idempotent-orders.png) |
 
 ---
 
