@@ -169,9 +169,9 @@ curl -s -X POST http://localhost:8101/api/v1/orders/1/confirm \
 - **VS Code / IntelliJ HTTP Client:** [`docs/api-requests.http`](docs/api-requests.http)
 - **Postman Collection v2.1:** [`docs/postman_collection.json`](docs/postman_collection.json) (auto-captures JWT tokens and replays `Idempotency-Key` requests)
 
-| Live Paginated Catalog (`GET /api/v1/products`) | Idempotent Checkout Schema (`POST /api/v1/orders`) |
-| :---: | :---: |
-| ![Swagger Live Catalog Response](docs/screenshots/swagger-catalog-live.png) | ![Swagger Idempotent Checkout Schema](docs/screenshots/swagger-idempotent-orders.png) |
+| Live Concurrency Playground (`30 Buyers -> 0 Oversells`) | OpenAPI `ProblemDetail` Schemas (`201` / `400` / `409`) | Live Paginated Catalog (`GET /api/v1/products`) |
+| :---: | :---: | :---: |
+| ![Ops Playground Burst](docs/screenshots/ops-playground-burst.png) | ![Swagger OpenAPI v2 ProblemDetail](docs/screenshots/swagger-openapi-v2.png) | ![Swagger Live Catalog Response](docs/screenshots/swagger-catalog-live.png) |
 
 ---
 

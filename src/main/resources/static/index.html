@@ -1281,7 +1281,7 @@
                 '<span class="voucher-code">' + escapeHtml(v.code) + '</span>' +
                 '<span class="pill pill-green">' + escapeHtml(discountLabel) + '</span>' +
               '</div>' +
-              '<div class="mono" style="color:var(--text-secondary);">Claimed: <strong>' + v.claimedCount + ' / ' + v.maxRedemptions + '</strong> (' + v.remainingRedemptions + ' remaining)</div>' +
+              '<div class="mono" style="color:var(--text-secondary);">Claimed: <strong>' + v.claimedCount + ' / ' + v.maxRedemptions + '</strong> (' + (v.remainingQuota ?? (v.maxRedemptions - v.claimedCount)) + ' remaining)</div>' +
               '<div class="progress-track" style="width:100%;"><div class="progress-fill" style="width:' + pct + '%;background:var(--accent-cyan);"></div></div>' +
               '<div class="mono" style="color:var(--text-muted);font-size:0.74rem;">Min Order: $' + Number(v.minOrderAmount).toFixed(2) + '</div>' +
             '</div>'
