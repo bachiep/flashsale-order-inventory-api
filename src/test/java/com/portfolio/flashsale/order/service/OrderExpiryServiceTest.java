@@ -14,7 +14,9 @@ import com.portfolio.flashsale.auth.domain.User;
 import com.portfolio.flashsale.catalog.domain.Product;
 import com.portfolio.flashsale.catalog.service.CatalogService;
 import com.portfolio.flashsale.common.config.AppProperties;
+import com.portfolio.flashsale.common.observability.FlashSaleMetrics;
 import com.portfolio.flashsale.inventory.repository.InventoryItemRepository;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import com.portfolio.flashsale.order.domain.Order;
 import com.portfolio.flashsale.order.domain.OrderItem;
 import com.portfolio.flashsale.order.domain.OrderStatus;
@@ -57,6 +59,7 @@ class OrderExpiryServiceTest {
 
     private OrderExpiryService expiryService;
     private Clock clock;
+    private FlashSaleMetrics flashSaleMetrics;
 
     @BeforeEach
     void setUp() {
@@ -68,6 +71,7 @@ class OrderExpiryServiceTest {
                 new AppProperties.Seed(false)
         );
         when(transactionManager.getTransaction(any())).thenReturn(mock(TransactionStatus.class));
+        flashSaleMetrics = new FlashSaleMetrics(new SimpleMeterRegistry(), clock);
         expiryService = new OrderExpiryService(
                 orderRepository,
                 inventoryItemRepository,
@@ -75,7 +79,8 @@ class OrderExpiryServiceTest {
                 catalogService,
                 props,
                 clock,
-                transactionManager
+                transactionManager,
+                flashSaleMetrics
         );
     }
 
@@ -172,6 +177,7 @@ class OrderExpiryServiceTest {
         int expiredCount = expiryService.expirePendingReservations();
 
         assertThat(expiredCount).isEqualTo(1);
+        assertThat(flashSaleMetrics.snapshot().ordersExpired()).isEqualTo(1L);
         verify(inventoryItemRepository).releaseReservedStock(20L, 2, clock.instant());
         verify(voucherClaimRepository).restoreToClaimed(30L, 10L);
         verify(catalogService).evictAllCatalogCaches();

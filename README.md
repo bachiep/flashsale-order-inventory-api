@@ -1,6 +1,6 @@
 # Flash-Sale Order & Inventory Reservation API
 
-> **One-sentence pitch:** A concurrency-safe RESTful backend API built with Java 21 and Spring Boot 3.4 that handles flash-sale product browsing, limited-quota vouchers, idempotent order checkout, and TTL-based inventory reservations without overselling.
+> **One-sentence pitch:** A concurrency-safe RESTful backend API built with Java 21 and Spring Boot 3.4 featuring an interactive concurrency playground, Micrometer telemetry, `X-Request-Id` correlation tracing, limited-quota flash vouchers, idempotent order checkout, and TTL-based inventory reservations without overselling.
 
 [![CI](https://github.com/bachiep/flashsale-order-inventory-api/actions/workflows/ci.yml/badge.svg)](https://github.com/bachiep/flashsale-order-inventory-api/actions/workflows/ci.yml)
 ![Java 21](https://img.shields.io/badge/Java-21%20LTS-007396?style=flat-square&logo=openjdk&logoColor=white)
@@ -26,11 +26,13 @@
 
 ```mermaid
 flowchart LR
-    Client["Client / Swagger UI"] --> Security["JWT Filter & RBAC<br/>(Spring Security 6)"]
-    Security --> Controllers["REST Controllers (/api/v1)<br/>RFC 7807 ProblemDetail"]
+    Client["Playground Console (/) / Swagger UI"] --> Filter["CorrelationIdFilter (X-Request-Id + MDC)"]
+    Filter --> Security["JWT Filter & RBAC<br/>(Spring Security 6)"]
+    Security --> Controllers["REST Controllers (/api/v1)<br/>RFC 7807 ProblemDetail + requestId"]
     Controllers --> Facade["OrderPlacementFacade<br/>(Idempotency-Key + Hash)"]
     Controllers --> Services["Modular Services<br/>(auth, catalog, voucher, order)"]
     Facade --> Services
+    Services --> Metrics["FlashSaleMetrics<br/>(Micrometer /api/v1/metrics/summary)"]
     Services --> Cache["Cache-Aside<br/>Caffeine (dev/test) | Redis 7 (docker)"]
     Services --> DB[("H2 PostgreSQL-Mode (dev/test)<br/>PostgreSQL 16 (docker)")]
     Scheduler["OrderExpiryScheduler<br/>(@Scheduled + Clock)"] --> Services
@@ -58,6 +60,8 @@ stateDiagram-v2
   - See [OrderExpiryService.java](src/main/java/com/portfolio/flashsale/order/service/OrderExpiryService.java).
 - **JWT Rotation with Reuse Detection & RFC 7807 Errors:** Uses `BCrypt`, `jjwt` 0.12.7 Access Tokens, SHA-256 hashed Refresh Tokens rotated on each use (revoking the entire active user token family if an already-rotated token is replayed), and uniform RFC 7807 `ProblemDetail` payloads across both MVC and Security filters.
   - See [AuthService.java](src/main/java/com/portfolio/flashsale/auth/service/AuthService.java) and [GlobalExceptionHandler.java](src/main/java/com/portfolio/flashsale/common/exception/GlobalExceptionHandler.java).
+- **Observability, Request Correlation & Live Concurrency Playground (`v2.0`):** `CorrelationIdFilter` propagates `X-Request-Id` into SLF4J `MDC`, response headers, and every `ProblemDetail.requestId`; `FlashSaleMetrics` records live Micrometer counters exposed via `GET /api/v1/metrics/summary`; and `GET /` serves an interactive dark-slate console to run 30-buyer stock contention bursts and idempotency probes directly from the browser.
+  - See [CorrelationIdFilter.java](src/main/java/com/portfolio/flashsale/common/observability/CorrelationIdFilter.java), [FlashSaleMetrics.java](src/main/java/com/portfolio/flashsale/common/observability/FlashSaleMetrics.java), and [index.html](src/main/resources/static/index.html).
 
 ---
 
@@ -102,9 +106,11 @@ Assigned Docker host ports:
 - **PostgreSQL 16:** `localhost:5431` -> container `5432`
 - **Redis 7:** `localhost:6381` -> container `6379`
 
-### Interactive Docs & Seeded Demo Data
+### Interactive Docs, Live Playground & Seeded Demo Data
 
-- **Swagger UI:** `http://localhost:8101/swagger-ui.html`
+- **Live Concurrency Playground (`v2.0`):** `http://localhost:8101/`
+- **Swagger UI:** `http://localhost:8101/swagger-ui/index.html` (or `/swagger-ui.html`)
+- **Live Telemetry Summary:** `http://localhost:8101/api/v1/metrics/summary`
 - **Health Endpoint:** `http://localhost:8101/api/v1/health`
 - **H2 Console (`dev` profile):** `http://localhost:8101/h2-console` (JDBC URL: `jdbc:h2:mem:flashsale`, User: `sa`, empty password)
 - **Seeded Accounts (`dev` profile):**
@@ -118,6 +124,7 @@ Assigned Docker host ports:
 | Module | Method & Path | Access | Description |
 | :--- | :--- | :--- | :--- |
 | Health | `GET /api/v1/health` | Public | Service, active profiles, and DB connectivity probe |
+| Telemetry & UI | `GET /`, `GET /api/v1/metrics/summary` | Public | Interactive concurrency playground & live Micrometer counter snapshot |
 | Auth | `POST /api/v1/auth/register`, `/login`, `/refresh`, `/logout` | Public | Registration, login, refresh token rotation, revocation |
 | Auth | `GET /api/v1/auth/me` | Authenticated | Current authenticated user profile |
 | Catalog | `GET /api/v1/products`, `GET /api/v1/products/{id}` | Public | Paginated search/filter & cached product details |
@@ -180,18 +187,33 @@ Run the full unit, API integration, and multi-threaded concurrency test suite lo
 ./mvnw -B verify
 ```
 
-### Measured Verification Summary (`40` Tests Passing, `0` Failures, `0` Skipped)
+### Measured Verification Summary (`45` Tests Passing, `0` Failures, `0` Skipped)
 
 | Test Suite | Tests | What It Verifies |
 | :--- | :---: | :--- |
 | `ApplicationContextIntegrationTest` | 2 | Full Spring context, Flyway `V1` schema on H2 PostgreSQL-mode, `ddl-auto: validate`, `/api/v1/health`, `/v3/api-docs` |
-| `GlobalExceptionHandlerTest` | 3 | RFC 7807 `ProblemDetail` payloads for domain conflicts, validation field errors, and missing headers |
+| `ObservabilityIntegrationTest` | 5 | `CorrelationIdFilter` UUID generation/echo & MDC cleanup, `ProblemDetail.requestId` on `400`/`401`/`403`/`404`, live Micrometer counters at `/api/v1/metrics/summary`, `@ApiResponses` schemas in `/v3/api-docs`, and `GET /` playground HTML |
+| `GlobalExceptionHandlerTest` | 3 | RFC 7807 `ProblemDetail` payloads with `requestId` for domain conflicts, validation field errors, and missing headers |
 | `DevDataSeederTest` | 2 | Idempotent dev seeding on empty DB and skip behavior when users already exist |
 | `JwtServiceTest`, `AuthServiceTest`, `AuthIntegrationTest` | 12 | JWT generation/expiry via `Clock`, refresh rotation, token-family revocation on reuse, logout, `401`/`403` RBAC |
 | `CatalogServiceTest`, `CatalogIntegrationTest` | 6 | Pagination/filtering, duplicate SKU `409`, `@Version` optimistic lock guard, Caffeine Cache-Aside population & eviction |
 | `VoucherServiceTest`, `VoucherConcurrencyIntegrationTest` | 5 | Discount math, time-window guard, duplicate claim `409`, **30 concurrent threads claiming quota=5 -> 5 `201` & 25 `409`** |
 | `OrderServiceTest`, `OrderConcurrencyIntegrationTest` | 6 | `Idempotency-Key` replay & payload mismatch `409`, owner isolation `403`, confirm/cancel transitions, **50 concurrent threads buying 10 items -> 10 orders, 40 `409`, 0 oversells** |
 | `OrderExpiryServiceTest`, `OrderExpiryIntegrationTest` | 4 | Deterministic `Clock` TTL expiry without `Thread.sleep`, voucher restoration, concurrent confirm/expiry race safety, malformed JSON `400` |
+
+### Concurrent Load Benchmark ([`benchmarks/run_load_benchmark.py`](benchmarks/run_load_benchmark.py) & [`docs/BENCHMARK.md`](docs/BENCHMARK.md))
+
+Measured locally with Python 3 (`urllib.request` + `ThreadPoolExecutor`) against the packaged Spring Boot `3.4.13` JAR on `http://127.0.0.1:8101`:
+
+```bash
+python benchmarks/run_load_benchmark.py --base-url http://127.0.0.1:8101 --requests 100 --workers 25 --stock 15 --voucher-quota 10
+```
+
+| Wave | Scenario | Status Split | Throughput | p50 | p95 | p99 | Oversells |
+| :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+| **Wave 1** | 25 users claiming voucher (`quota=10`) | `10 x 201`, `15 x 409` | **100.19 RPS** | 237.87 ms | 241.12 ms | 241.76 ms | **0** |
+| **Wave 2** | 100 checkout requests across 25 workers (`stock=15`) | `15 x 201`, `85 x 409` | **96.79 RPS** | 67.97 ms | 746.82 ms | 764.87 ms | **0** |
+| **Wave 3** | 25 concurrent retries on same `Idempotency-Key` (+ mutation probe) | `25 x 201` (`1` order, `24` replays) + `409` | **17.49 RPS** | 351.73 ms | 462.04 ms | 511.70 ms | **0** |
 
 ---
 
@@ -201,7 +223,7 @@ Run the full unit, API integration, and multi-threaded concurrency test suite lo
 src/
 ├── main/
 │   ├── java/com/portfolio/flashsale/
-│   │   ├── common/          # AppProperties, ClockConfig, CacheConfig, OpenApiConfig, SchedulerConfig, DevDataSeeder, RFC 7807 GlobalExceptionHandler, HealthController
+│   │   ├── common/          # AppProperties, ClockConfig, CacheConfig, OpenApiConfig, SchedulerConfig, DevDataSeeder, GlobalExceptionHandler, HealthController, observability (CorrelationIdFilter, FlashSaleMetrics, MetricsController, ConsoleViewController)
 │   │   ├── auth/            # User, RefreshToken, Role, JwtService, JwtAuthenticationFilter, SecurityConfig, SecurityProblemHandler, AuthService, AuthController
 │   │   ├── catalog/         # Product, ProductRepository (@EntityGraph), ProductSpecifications, CatalogService, ProductController, AdminProductController
 │   │   ├── inventory/       # InventoryItem (@Version), InventoryItemRepository (atomic reserve/confirm/release queries)
@@ -209,9 +231,12 @@ src/
 │   │   └── order/           # Order, OrderItem, IdempotencyRecord, OrderPlacementFacade, OrderService, OrderExpiryService, OrderExpiryScheduler, OrderController
 │   └── resources/
 │       ├── application.yml, application-dev.yml, application-test.yml, application-docker.yml
-│       └── db/migration/V1__init_schema.sql
+│       ├── db/migration/V1__init_schema.sql
+│       └── static/index.html # Dark-slate Interactive Concurrency & Idempotency Playground (GET /)
+├── benchmarks/
+│   └── run_load_benchmark.py # Zero-dependency Python 3 multi-threaded contention benchmark
 └── test/
-    └── java/com/portfolio/flashsale/  # 14 unit, MockMvc integration, Clock TTL, and CountDownLatch concurrency test suites
+    └── java/com/portfolio/flashsale/  # 15 unit, MockMvc integration, Clock TTL, observability, and CountDownLatch concurrency test suites
 ```
 
 ---

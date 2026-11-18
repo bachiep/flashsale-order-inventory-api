@@ -1,11 +1,13 @@
 package com.portfolio.flashsale.auth.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.portfolio.flashsale.common.observability.CorrelationIdFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Clock;
+import java.util.Locale;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
@@ -65,9 +67,10 @@ public class SecurityProblemHandler implements AuthenticationEntryPoint, AccessD
     ) throws IOException {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, detail);
         problem.setTitle(status.getReasonPhrase());
-        problem.setType(URI.create("https://api.flashsale.local/problems/" + errorCode.toLowerCase()));
+        problem.setType(URI.create("https://api.flashsale.local/problems/" + errorCode.toLowerCase(Locale.ROOT)));
         problem.setInstance(URI.create(request.getRequestURI()));
         problem.setProperty("errorCode", errorCode);
+        problem.setProperty("requestId", CorrelationIdFilter.resolveOrGenerateRequestId(request));
         problem.setProperty("timestamp", clock.instant().toString());
 
         response.setStatus(status.value());

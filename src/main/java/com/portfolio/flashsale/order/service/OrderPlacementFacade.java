@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.portfolio.flashsale.catalog.service.CatalogService;
 import com.portfolio.flashsale.common.exception.BadRequestException;
 import com.portfolio.flashsale.common.exception.ConflictException;
+import com.portfolio.flashsale.common.observability.FlashSaleMetrics;
 import com.portfolio.flashsale.order.domain.IdempotencyRecord;
 import com.portfolio.flashsale.order.dto.CreateOrderRequest;
 import com.portfolio.flashsale.order.dto.OrderItemRequest;
@@ -30,17 +31,20 @@ public class OrderPlacementFacade {
     private final IdempotencyRecordRepository idempotencyRecordRepository;
     private final CatalogService catalogService;
     private final ObjectMapper objectMapper;
+    private final FlashSaleMetrics flashSaleMetrics;
 
     public OrderPlacementFacade(
             OrderService orderService,
             IdempotencyRecordRepository idempotencyRecordRepository,
             CatalogService catalogService,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            FlashSaleMetrics flashSaleMetrics
     ) {
         this.orderService = orderService;
         this.idempotencyRecordRepository = idempotencyRecordRepository;
         this.catalogService = catalogService;
         this.objectMapper = objectMapper;
+        this.flashSaleMetrics = flashSaleMetrics;
     }
 
     public OrderPlacementResult placeOrder(Long userId, String rawIdempotencyKey, CreateOrderRequest request) {
@@ -73,6 +77,7 @@ public class OrderPlacementFacade {
                     normalizedVoucherCode
             );
             catalogService.evictAllCatalogCaches();
+            flashSaleMetrics.recordOrderReserved();
             return new OrderPlacementResult(created, false);
         } catch (DataIntegrityViolationException ex) {
             Optional<IdempotencyRecord> racedRecord = idempotencyRecordRepository
@@ -93,6 +98,7 @@ public class OrderPlacementFacade {
         }
         try {
             OrderResponse replayedOrder = objectMapper.readValue(record.getResponseBody(), OrderResponse.class);
+            flashSaleMetrics.recordIdempotentReplay();
             return new OrderPlacementResult(replayedOrder, true);
         } catch (JsonProcessingException ex) {
             throw new IllegalStateException("Failed to deserialize stored idempotency response", ex);

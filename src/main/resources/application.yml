@@ -18,6 +18,7 @@ spring:
       write-dates-as-timestamps: false
 
 springdoc:
+  default-produces-media-type: application/json
   swagger-ui:
     path: /swagger-ui.html
     operationsSorter: method
@@ -27,6 +28,10 @@ management:
     web:
       exposure:
         include: health,info
+
+logging:
+  pattern:
+    level: "%5p [%X{requestId:-}]"
 
 app:
   jwt:

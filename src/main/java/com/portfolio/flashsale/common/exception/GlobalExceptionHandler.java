@@ -1,5 +1,6 @@
 package com.portfolio.flashsale.common.exception;
 
+import com.portfolio.flashsale.common.observability.CorrelationIdFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.time.Clock;
@@ -168,6 +169,7 @@ public class GlobalExceptionHandler {
         problem.setType(URI.create("https://api.flashsale.local/problems/" + errorCode.toLowerCase(Locale.ROOT).replace('_', '-')));
         problem.setInstance(URI.create(request.getRequestURI()));
         problem.setProperty("errorCode", errorCode);
+        problem.setProperty("requestId", CorrelationIdFilter.resolveOrGenerateRequestId(request));
         problem.setProperty("timestamp", clock.instant().toString());
         return problem;
     }

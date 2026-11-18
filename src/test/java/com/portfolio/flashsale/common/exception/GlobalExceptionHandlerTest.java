@@ -35,13 +35,15 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void returnsRfc7807ProblemDetailForConflictException() throws Exception {
-        mockMvc.perform(post("/test/conflict"))
+        mockMvc.perform(post("/test/conflict")
+                        .header("X-Request-Id", "standalone-req-1"))
                 .andExpect(status().isConflict())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
                 .andExpect(jsonPath("$.status").value(409))
                 .andExpect(jsonPath("$.title").value("Conflict"))
                 .andExpect(jsonPath("$.detail").value("Insufficient inventory"))
                 .andExpect(jsonPath("$.errorCode").value("INSUFFICIENT_STOCK"))
+                .andExpect(jsonPath("$.requestId").value("standalone-req-1"))
                 .andExpect(jsonPath("$.timestamp").value("2026-01-15T10:00:00Z"));
     }
 

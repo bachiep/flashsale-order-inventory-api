@@ -5,6 +5,7 @@ import com.portfolio.flashsale.auth.repository.UserRepository;
 import com.portfolio.flashsale.common.exception.BadRequestException;
 import com.portfolio.flashsale.common.exception.ConflictException;
 import com.portfolio.flashsale.common.exception.ResourceNotFoundException;
+import com.portfolio.flashsale.common.observability.FlashSaleMetrics;
 import com.portfolio.flashsale.voucher.domain.DiscountType;
 import com.portfolio.flashsale.voucher.domain.FlashVoucher;
 import com.portfolio.flashsale.voucher.domain.VoucherClaim;
@@ -32,17 +33,20 @@ public class VoucherService {
     private final VoucherClaimRepository claimRepository;
     private final UserRepository userRepository;
     private final Clock clock;
+    private final FlashSaleMetrics flashSaleMetrics;
 
     public VoucherService(
             FlashVoucherRepository voucherRepository,
             VoucherClaimRepository claimRepository,
             UserRepository userRepository,
-            Clock clock
+            Clock clock,
+            FlashSaleMetrics flashSaleMetrics
     ) {
         this.voucherRepository = voucherRepository;
         this.claimRepository = claimRepository;
         this.userRepository = userRepository;
         this.clock = clock;
+        this.flashSaleMetrics = flashSaleMetrics;
     }
 
     @Transactional
@@ -107,6 +111,7 @@ public class VoucherService {
 
         int updatedRows = voucherRepository.incrementClaimedCountIfAvailable(voucher.getId(), now);
         if (updatedRows == 0) {
+            flashSaleMetrics.recordVoucherQuotaConflict();
             throw new ConflictException("VOUCHER_QUOTA_EXHAUSTED", "Voucher quota has been exhausted for " + code);
         }
 
@@ -115,6 +120,7 @@ public class VoucherService {
         VoucherClaim savedClaim = claimRepository.saveAndFlush(
                 new VoucherClaim(voucherRef, userRef, VoucherClaimStatus.CLAIMED, now)
         );
+        flashSaleMetrics.recordVoucherClaimed();
         return VoucherClaimResponse.of(savedClaim, voucher);
     }
 
