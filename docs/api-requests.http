@@ -1,0 +1,112 @@
+### Flash-Sale Order & Inventory API — VS Code REST Client / IntelliJ HTTP Requests
+@baseUrl = http://localhost:8101
+@customerEmail = demo@flashsale.local
+@customerPassword = Demo@1234
+@adminEmail = admin@flashsale.local
+@adminPassword = Admin@1234
+@idempotencyKey = demo-checkout-001
+
+### 1. Health Probe
+GET {{baseUrl}}/api/v1/health
+
+### 2. Customer Login (captures accessToken for requests below)
+# @name customerLogin
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{customerEmail}}",
+  "password": "{{customerPassword}}"
+}
+
+###
+@customerToken = {{customerLogin.response.body.$.accessToken}}
+
+### 3. Browse Active Flash-Sale Products (Cache-Aside)
+GET {{baseUrl}}/api/v1/products?activeOnly=true&page=0&size=10&sort=id,asc
+
+### 4. List Active Flash Vouchers
+GET {{baseUrl}}/api/v1/vouchers/active
+
+### 5. Atomically Claim Limited Voucher Quota
+POST {{baseUrl}}/api/v1/vouchers/FLASH20/claim
+Authorization: Bearer {{customerToken}}
+
+### 6. Idempotent Order Checkout (Creates order + 15-min stock hold)
+# @name createOrder
+POST {{baseUrl}}/api/v1/orders
+Authorization: Bearer {{customerToken}}
+Idempotency-Key: {{idempotencyKey}}
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "productId": 1,
+      "quantity": 1
+    }
+  ],
+  "voucherCode": "FLASH20"
+}
+
+###
+@orderId = {{createOrder.response.body.$.id}}
+
+### 7. Safe Network Retry Replay (Same Idempotency-Key + Identical Body -> X-Idempotency-Replayed: true)
+POST {{baseUrl}}/api/v1/orders
+Authorization: Bearer {{customerToken}}
+Idempotency-Key: {{idempotencyKey}}
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "productId": 1,
+      "quantity": 1
+    }
+  ],
+  "voucherCode": "FLASH20"
+}
+
+### 8. Idempotency Payload Mismatch Conflict (Same Key + Different Body -> 409 Conflict)
+POST {{baseUrl}}/api/v1/orders
+Authorization: Bearer {{customerToken}}
+Idempotency-Key: {{idempotencyKey}}
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "productId": 1,
+      "quantity": 2
+    }
+  ],
+  "voucherCode": "FLASH20"
+}
+
+### 9. Confirm Payment on Created Order
+POST {{baseUrl}}/api/v1/orders/{{orderId}}/confirm
+Authorization: Bearer {{customerToken}}
+
+### 10. Admin Login (ROLE_ADMIN)
+# @name adminLogin
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{adminEmail}}",
+  "password": "{{adminPassword}}"
+}
+
+###
+@adminToken = {{adminLogin.response.body.$.accessToken}}
+
+### 11. Admin Inventory Restock with Optimistic Version Check
+PATCH {{baseUrl}}/api/v1/admin/products/1/inventory
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "availableQty": 40,
+  "expectedVersion": 2
+}

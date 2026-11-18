@@ -1,0 +1,176 @@
+{
+  "info": {
+    "name": "Flash-Sale Order & Inventory API",
+    "_postman_id": "8e16b8b0-7094-4ef6-b389-55b0b6e4e101",
+    "description": "Executable collection demonstrating Flash-Sale browsing, voucher claiming, Idempotency-Key checkout/replay, order confirmation, and optimistic admin restock.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8101" },
+    { "key": "accessToken", "value": "" },
+    { "key": "adminToken", "value": "" },
+    { "key": "orderId", "value": "1" },
+    { "key": "idempotencyKey", "value": "postman-checkout-001" }
+  ],
+  "item": [
+    {
+      "name": "1. Health Check",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/health"
+      }
+    },
+    {
+      "name": "2. Customer Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "  const data = pm.response.json();",
+              "  if (data.accessToken) { pm.collectionVariables.set('accessToken', data.accessToken); }",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"demo@flashsale.local\",\n  \"password\": \"Demo@1234\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/auth/login"
+      }
+    },
+    {
+      "name": "3. Browse Active Products",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/products?activeOnly=true&page=0&size=10&sort=id,asc"
+      }
+    },
+    {
+      "name": "4. Claim Flash Voucher (FLASH20)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+        "url": "{{baseUrl}}/api/v1/vouchers/FLASH20/claim"
+      }
+    },
+    {
+      "name": "5. Idempotent Checkout (Create Order)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 201 || pm.response.code === 200) {",
+              "  const data = pm.response.json();",
+              "  if (data.id) { pm.collectionVariables.set('orderId', String(data.id)); }",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+          { "key": "Idempotency-Key", "value": "{{idempotencyKey}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"items\": [\n    { \"productId\": 1, \"quantity\": 1 }\n  ],\n  \"voucherCode\": \"FLASH20\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/orders"
+      }
+    },
+    {
+      "name": "6. Replay Checkout (Same Idempotency-Key)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+          { "key": "Idempotency-Key", "value": "{{idempotencyKey}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"items\": [\n    { \"productId\": 1, \"quantity\": 1 }\n  ],\n  \"voucherCode\": \"FLASH20\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/orders"
+      }
+    },
+    {
+      "name": "7. Payload Mismatch Conflict (409 Expected)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+          { "key": "Idempotency-Key", "value": "{{idempotencyKey}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"items\": [\n    { \"productId\": 1, \"quantity\": 2 }\n  ],\n  \"voucherCode\": \"FLASH20\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/orders"
+      }
+    },
+    {
+      "name": "8. Confirm Payment",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+        "url": "{{baseUrl}}/api/v1/orders/{{orderId}}/confirm"
+      }
+    },
+    {
+      "name": "9. Admin Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "  const data = pm.response.json();",
+              "  if (data.accessToken) { pm.collectionVariables.set('adminToken', data.accessToken); }",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@flashsale.local\",\n  \"password\": \"Admin@1234\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/auth/login"
+      }
+    },
+    {
+      "name": "10. Admin Adjust Inventory (@Version Check)",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"availableQty\": 40,\n  \"expectedVersion\": 2\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/admin/products/1/inventory"
+      }
+    }
+  ]
+}
