@@ -2,10 +2,12 @@ package com.portfolio.flashsale.order.service;
 
 import com.portfolio.flashsale.catalog.service.CatalogService;
 import com.portfolio.flashsale.common.config.AppProperties;
+import com.portfolio.flashsale.common.exception.ResourceNotFoundException;
 import com.portfolio.flashsale.common.observability.FlashSaleMetrics;
 import com.portfolio.flashsale.inventory.repository.InventoryItemRepository;
 import com.portfolio.flashsale.order.domain.Order;
 import com.portfolio.flashsale.order.domain.OrderItem;
+import com.portfolio.flashsale.order.dto.OrderExpirySweepResponse;
 import com.portfolio.flashsale.order.repository.OrderRepository;
 import com.portfolio.flashsale.voucher.repository.VoucherClaimRepository;
 import java.time.Clock;
@@ -52,22 +54,45 @@ public class OrderExpiryService {
     }
 
     public int expirePendingReservations() {
+        return sweepBatchReservations(false);
+    }
+
+    public OrderExpirySweepResponse triggerManualSweep(boolean includeActiveHolds, Long orderId) {
+        int expiredCount;
+        if (orderId != null) {
+            if (orderRepository.findDetailedById(orderId).isEmpty()) {
+                throw new ResourceNotFoundException("ORDER_NOT_FOUND", "Order not found: " + orderId);
+            }
+            Boolean expired = transactionTemplate.execute(status -> expireSingleOrder(orderId, includeActiveHolds));
+            expiredCount = Boolean.TRUE.equals(expired) ? 1 : 0;
+            if (expiredCount > 0) {
+                flashSaleMetrics.recordOrderExpired();
+                catalogService.evictAllCatalogCaches();
+            }
+        } else {
+            expiredCount = sweepBatchReservations(includeActiveHolds);
+        }
+        return new OrderExpirySweepResponse(expiredCount, includeActiveHolds, orderId, clock.instant());
+    }
+
+    private int sweepBatchReservations(boolean includeActiveHolds) {
         int batchSize = Math.max(1, appProperties.scheduler().reservationExpiry().batchSize());
         int totalExpired = 0;
 
         for (int batch = 0; batch < MAX_BATCHES_PER_TICK; batch++) {
             Instant cutoff = clock.instant();
-            List<Long> candidateIds = orderRepository.findExpiredPendingOrderIds(
-                    cutoff,
-                    PageRequest.of(0, batchSize)
-            );
+            List<Long> candidateIds = includeActiveHolds
+                    ? orderRepository.findAllPendingOrderIds(PageRequest.of(0, batchSize))
+                    : orderRepository.findExpiredPendingOrderIds(cutoff, PageRequest.of(0, batchSize));
             if (candidateIds.isEmpty()) {
                 break;
             }
 
             int expiredInBatch = 0;
-            for (Long orderId : candidateIds) {
-                Boolean expired = transactionTemplate.execute(status -> expireSingleOrder(orderId));
+            for (Long candidateId : candidateIds) {
+                Boolean expired = transactionTemplate.execute(
+                        status -> expireSingleOrder(candidateId, includeActiveHolds)
+                );
                 if (Boolean.TRUE.equals(expired)) {
                     expiredInBatch++;
                     totalExpired++;
@@ -86,14 +111,16 @@ public class OrderExpiryService {
         return totalExpired;
     }
 
-    private boolean expireSingleOrder(Long orderId) {
+    private boolean expireSingleOrder(Long orderId, boolean forceImmediate) {
         Order order = orderRepository.findDetailedById(orderId).orElse(null);
         if (order == null) {
             return false;
         }
 
         Instant now = clock.instant();
-        int updated = orderRepository.markExpiredIfPendingAndPastDeadline(orderId, now);
+        int updated = forceImmediate
+                ? orderRepository.markExpiredImmediatelyIfPending(orderId, now)
+                : orderRepository.markExpiredIfPendingAndPastDeadline(orderId, now);
         if (updated == 0) {
             return false;
         }

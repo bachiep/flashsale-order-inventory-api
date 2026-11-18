@@ -4,6 +4,9 @@ server:
 spring:
   application:
     name: flashsale-order-inventory-api
+  threads:
+    virtual:
+      enabled: true
   profiles:
     default: dev
   jpa:
@@ -47,3 +50,13 @@ app:
       batch-size: 50
   seed:
     enabled: ${APP_SEED_ENABLED:true}
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:true}
+    order-checkout:
+      capacity: ${RATE_LIMIT_ORDER_CAPACITY:35}
+      refill-tokens: ${RATE_LIMIT_ORDER_REFILL_TOKENS:35}
+      refill-period-seconds: ${RATE_LIMIT_ORDER_REFILL_PERIOD_SECONDS:60}
+    voucher-claim:
+      capacity: ${RATE_LIMIT_VOUCHER_CAPACITY:5}
+      refill-tokens: ${RATE_LIMIT_VOUCHER_REFILL_TOKENS:5}
+      refill-period-seconds: ${RATE_LIMIT_VOUCHER_REFILL_PERIOD_SECONDS:10}

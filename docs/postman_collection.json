@@ -171,6 +171,23 @@
         },
         "url": "{{baseUrl}}/api/v1/admin/products/1/inventory"
       }
+    },
+    {
+      "name": "11. Admin Run Immediate TTL Expiry Sweep",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+        ],
+        "url": "{{baseUrl}}/api/v1/admin/orders/expire-now?includeActiveHolds=true"
+      }
+    },
+    {
+      "name": "12. Live Micrometer Metrics Summary",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/metrics/summary"
+      }
     }
   ]
 }

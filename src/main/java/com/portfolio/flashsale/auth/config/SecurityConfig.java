@@ -3,6 +3,8 @@ package com.portfolio.flashsale.auth.config;
 import com.portfolio.flashsale.auth.security.JwtAuthenticationFilter;
 import com.portfolio.flashsale.auth.security.SecurityProblemHandler;
 import com.portfolio.flashsale.common.observability.CorrelationIdFilter;
+import com.portfolio.flashsale.common.ratelimit.FlashSaleRateLimitFilter;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -23,21 +25,33 @@ public class SecurityConfig {
 
     private final CorrelationIdFilter correlationIdFilter;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final FlashSaleRateLimitFilter flashSaleRateLimitFilter;
     private final SecurityProblemHandler securityProblemHandler;
 
     public SecurityConfig(
             CorrelationIdFilter correlationIdFilter,
             JwtAuthenticationFilter jwtAuthenticationFilter,
+            FlashSaleRateLimitFilter flashSaleRateLimitFilter,
             SecurityProblemHandler securityProblemHandler
     ) {
         this.correlationIdFilter = correlationIdFilter;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.flashSaleRateLimitFilter = flashSaleRateLimitFilter;
         this.securityProblemHandler = securityProblemHandler;
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public FilterRegistrationBean<FlashSaleRateLimitFilter> flashSaleRateLimitFilterRegistration(
+            FlashSaleRateLimitFilter filter
+    ) {
+        FilterRegistrationBean<FlashSaleRateLimitFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
     }
 
     @Bean
@@ -75,6 +89,7 @@ public class SecurityConfig {
                 )
                 .addFilterBefore(correlationIdFilter, SecurityContextHolderFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(flashSaleRateLimitFilter, JwtAuthenticationFilter.class)
                 .build();
     }
 }

@@ -110,3 +110,10 @@ Content-Type: application/json
   "availableQty": 40,
   "expectedVersion": 2
 }
+
+### 12. Admin Immediate TTL Expiry Sweep (Releases Pending Holds & Restores Stock)
+POST {{baseUrl}}/api/v1/admin/orders/expire-now?includeActiveHolds=true
+Authorization: Bearer {{adminToken}}
+
+### 13. Live Micrometer Telemetry Summary (includes rateLimitRejected)
+GET {{baseUrl}}/api/v1/metrics/summary

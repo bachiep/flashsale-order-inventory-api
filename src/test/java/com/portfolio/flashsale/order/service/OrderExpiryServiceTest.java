@@ -1,9 +1,11 @@
 package com.portfolio.flashsale.order.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -14,6 +16,7 @@ import com.portfolio.flashsale.auth.domain.User;
 import com.portfolio.flashsale.catalog.domain.Product;
 import com.portfolio.flashsale.catalog.service.CatalogService;
 import com.portfolio.flashsale.common.config.AppProperties;
+import com.portfolio.flashsale.common.exception.ResourceNotFoundException;
 import com.portfolio.flashsale.common.observability.FlashSaleMetrics;
 import com.portfolio.flashsale.inventory.repository.InventoryItemRepository;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -70,7 +73,7 @@ class OrderExpiryServiceTest {
                 new AppProperties.Scheduler(new AppProperties.Scheduler.ReservationExpiry(true, 30000, 50)),
                 new AppProperties.Seed(false)
         );
-        when(transactionManager.getTransaction(any())).thenReturn(mock(TransactionStatus.class));
+        lenient().when(transactionManager.getTransaction(any())).thenReturn(mock(TransactionStatus.class));
         flashSaleMetrics = new FlashSaleMetrics(new SimpleMeterRegistry(), clock);
         expiryService = new OrderExpiryService(
                 orderRepository,
@@ -181,5 +184,13 @@ class OrderExpiryServiceTest {
         verify(inventoryItemRepository).releaseReservedStock(20L, 2, clock.instant());
         verify(voucherClaimRepository).restoreToClaimed(30L, 10L);
         verify(catalogService).evictAllCatalogCaches();
+    }
+
+    @Test
+    void manualSweepThrowsNotFoundWhenTargetedOrderDoesNotExist() {
+        when(orderRepository.findDetailedById(999L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> expiryService.triggerManualSweep(true, 999L))
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 }

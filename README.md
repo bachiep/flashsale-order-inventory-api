@@ -1,6 +1,6 @@
 # Flash-Sale Order & Inventory Reservation API
 
-> **One-sentence pitch:** A concurrency-safe RESTful backend API built with Java 21 and Spring Boot 3.4 featuring an interactive concurrency playground, Micrometer telemetry, `X-Request-Id` correlation tracing, limited-quota flash vouchers, idempotent order checkout, and TTL-based inventory reservations without overselling.
+> **One-sentence pitch:** A concurrency-safe RESTful backend API built with **Java 21 (Virtual Threads)** and **Spring Boot 3.4** featuring an interactive Ops Console (`v2.1`), per-actor token-bucket rate limiting (`429`), Micrometer telemetry, `X-Request-Id` correlation tracing, limited-quota flash vouchers, idempotent order checkout, and TTL-based inventory reservations without overselling.
 
 [![CI](https://github.com/bachiep/flashsale-order-inventory-api/actions/workflows/ci.yml/badge.svg)](https://github.com/bachiep/flashsale-order-inventory-api/actions/workflows/ci.yml)
 ![Java 21](https://img.shields.io/badge/Java-21%20LTS-007396?style=flat-square&logo=openjdk&logoColor=white)
@@ -26,9 +26,10 @@
 
 ```mermaid
 flowchart LR
-    Client["Playground Console (/) / Swagger UI"] --> Filter["CorrelationIdFilter (X-Request-Id + MDC)"]
+    Client["Ops Console v2.1 (/) / Swagger UI"] --> Filter["CorrelationIdFilter (X-Request-Id + MDC)"]
     Filter --> Security["JWT Filter & RBAC<br/>(Spring Security 6)"]
-    Security --> Controllers["REST Controllers (/api/v1)<br/>RFC 7807 ProblemDetail + requestId"]
+    Security --> RateLimit["FlashSaleRateLimitFilter<br/>(Per-Actor Token Bucket -> 429)"]
+    RateLimit --> Controllers["REST Controllers (/api/v1)<br/>RFC 7807 ProblemDetail + requestId"]
     Controllers --> Facade["OrderPlacementFacade<br/>(Idempotency-Key + Hash)"]
     Controllers --> Services["Modular Services<br/>(auth, catalog, voucher, order)"]
     Facade --> Services
@@ -60,8 +61,10 @@ stateDiagram-v2
   - See [OrderExpiryService.java](src/main/java/com/portfolio/flashsale/order/service/OrderExpiryService.java).
 - **JWT Rotation with Reuse Detection & RFC 7807 Errors:** Uses `BCrypt`, `jjwt` 0.12.7 Access Tokens, SHA-256 hashed Refresh Tokens rotated on each use (revoking the entire active user token family if an already-rotated token is replayed), and uniform RFC 7807 `ProblemDetail` payloads across both MVC and Security filters.
   - See [AuthService.java](src/main/java/com/portfolio/flashsale/auth/service/AuthService.java) and [GlobalExceptionHandler.java](src/main/java/com/portfolio/flashsale/common/exception/GlobalExceptionHandler.java).
-- **Observability, Request Correlation & Live Concurrency Playground (`v2.0`):** `CorrelationIdFilter` propagates `X-Request-Id` into SLF4J `MDC`, response headers, and every `ProblemDetail.requestId`; `FlashSaleMetrics` records live Micrometer counters exposed via `GET /api/v1/metrics/summary`; and `GET /` serves an interactive dark-slate console to run 30-buyer stock contention bursts and idempotency probes directly from the browser.
-  - See [CorrelationIdFilter.java](src/main/java/com/portfolio/flashsale/common/observability/CorrelationIdFilter.java), [FlashSaleMetrics.java](src/main/java/com/portfolio/flashsale/common/observability/FlashSaleMetrics.java), and [index.html](src/main/resources/static/index.html).
+- **Per-Actor Token-Bucket Rate Limiting (`FlashSaleRateLimitFilter`) & Java 21 Virtual Threads (`v2.1`):** Enables `spring.threads.virtual.enabled: true` and protects burst-sensitive mutation routes (`POST /api/v1/orders`, `POST /api/v1/vouchers/{code}/claim`) per authenticated `userId` (client IP fallback), emitting `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `Retry-After`, RFC 7807 `429 ProblemDetail`, and incrementing `rateLimitRejected` in Micrometer.
+  - See [FlashSaleRateLimitFilter.java](src/main/java/com/portfolio/flashsale/common/ratelimit/FlashSaleRateLimitFilter.java) and [RateLimitProperties.java](src/main/java/com/portfolio/flashsale/common/ratelimit/RateLimitProperties.java).
+- **Observability, Request Correlation & Interactive Ops Console (`v2.1`):** `CorrelationIdFilter` propagates `X-Request-Id` into SLF4J `MDC`, response headers, and every `ProblemDetail.requestId`; `FlashSaleMetrics` records live Micrometer counters exposed via `GET /api/v1/metrics/summary`; and `GET /` serves an interactive dark-slate Ops Console to run 30-buyer stock contention bursts, idempotency probes, **voucher quota/rate-limit races (`201`/`409`/`429`)**, and **end-to-end order lifecycle transitions** (`Confirm`, `Cancel`, and on-demand `POST /api/v1/admin/orders/expire-now`).
+  - See [CorrelationIdFilter.java](src/main/java/com/portfolio/flashsale/common/observability/CorrelationIdFilter.java), [FlashSaleMetrics.java](src/main/java/com/portfolio/flashsale/common/observability/FlashSaleMetrics.java), [AdminOrderController.java](src/main/java/com/portfolio/flashsale/order/api/AdminOrderController.java), and [index.html](src/main/resources/static/index.html).
 
 ---
 
@@ -69,14 +72,14 @@ stateDiagram-v2
 
 | Layer | Technology | Purpose |
 | :--- | :--- | :--- |
-| Language & Runtime | Java 21 LTS | Records, switch expressions, `java.time.Clock` |
+| Language & Runtime | Java 21 LTS (Virtual Threads enabled) | Records, switch expressions, `java.time.Clock`, `spring.threads.virtual.enabled` |
 | Framework | Spring Boot 3.4.13 (Web, Data JPA, Validation, Security, Cache, Actuator) | Modular Monolith REST API (`open-in-view: false`) |
 | Auth & Security | Spring Security 6, `jjwt` 0.12.7, BCrypt | Stateless JWT Access + Refresh token rotation, RBAC (`ROLE_ADMIN`, `ROLE_CUSTOMER`) |
 | Schema & Migrations | Flyway + ANSI/PostgreSQL SQL (`V1__init_schema.sql`) | Versioned DDL with `hibernate.ddl-auto: validate` |
 | Persistence (Dual Profile) | H2 (`MODE=PostgreSQL`) in `dev`/`test` / PostgreSQL 16 in `docker` | Instant standalone local runs + production-parity Docker runtime |
 | Caching (Dual Profile) | Caffeine (`dev`/`test`) / Redis 7 (`docker`) | Cache-Aside (`@Cacheable` / `@CacheEvict`) on catalog reads |
 | API Documentation | Springdoc OpenAPI 2.8.17 | Interactive Swagger UI with Bearer JWT authorization |
-| Testing & Tooling | JUnit 5, Mockito, `MockMvc`, Maven Wrapper (`mvnw` / `mvnw.cmd`) | Unit, API integration, deterministic `Clock`, and `CountDownLatch` concurrency tests |
+| Testing & Tooling | JUnit 5, Mockito, `MockMvc`, JaCoCo `0.8.12`, Maven Wrapper | Unit, API integration, deterministic `Clock`, `CountDownLatch` concurrency tests, and `>= 75%` instruction coverage gate |
 
 ---
 
@@ -106,9 +109,9 @@ Assigned Docker host ports:
 - **PostgreSQL 16:** `localhost:5431` -> container `5432`
 - **Redis 7:** `localhost:6381` -> container `6379`
 
-### Interactive Docs, Live Playground & Seeded Demo Data
+### Interactive Docs, Live Ops Console & Seeded Demo Data
 
-- **Live Concurrency Playground (`v2.0`):** `http://localhost:8101/`
+- **Live Ops Console (`v2.1`):** `http://localhost:8101/`
 - **Swagger UI:** `http://localhost:8101/swagger-ui/index.html` (or `/swagger-ui.html`)
 - **Live Telemetry Summary:** `http://localhost:8101/api/v1/metrics/summary`
 - **Health Endpoint:** `http://localhost:8101/api/v1/health`
@@ -130,11 +133,12 @@ Assigned Docker host ports:
 | Catalog | `GET /api/v1/products`, `GET /api/v1/products/{id}` | Public | Paginated search/filter & cached product details |
 | Admin Catalog | `POST/PUT /api/v1/admin/products`, `PATCH .../inventory` | `ROLE_ADMIN` | Manage products & adjust stock with `@Version` guard |
 | Vouchers | `GET /api/v1/vouchers/active` | Public | List active campaigns in the current time window |
-| Vouchers | `POST /api/v1/vouchers/{code}/claim`, `GET /my-claims` | Authenticated | Atomically claim limited voucher quota & list user claims |
+| Vouchers | `POST /api/v1/vouchers/{code}/claim`, `GET /my-claims` | Authenticated | Atomically claim limited voucher quota (`429` rate-limited) & list user claims |
 | Admin Vouchers | `POST/GET /api/v1/admin/vouchers` | `ROLE_ADMIN` | Create & monitor flash voucher campaigns |
-| Orders | `POST /api/v1/orders` | Authenticated | Idempotent checkout (`Idempotency-Key` header required) |
+| Orders | `POST /api/v1/orders` | Authenticated | Idempotent checkout (`Idempotency-Key` required, `429` rate-limited) |
 | Orders | `GET /api/v1/orders`, `GET /api/v1/orders/{id}` | Owner / Admin | Paginated order history & order details |
 | Orders | `POST /api/v1/orders/{id}/confirm`, `POST .../cancel` | Owner / Admin | Confirm payment or cancel and release reserved stock |
+| Admin Orders | `POST /api/v1/admin/orders/expire-now` | `ROLE_ADMIN` | Immediate reservation TTL expiry sweep (`includeActiveHolds`, optional `orderId`) |
 
 ---
 
@@ -169,9 +173,9 @@ curl -s -X POST http://localhost:8101/api/v1/orders/1/confirm \
 - **VS Code / IntelliJ HTTP Client:** [`docs/api-requests.http`](docs/api-requests.http)
 - **Postman Collection v2.1:** [`docs/postman_collection.json`](docs/postman_collection.json) (auto-captures JWT tokens and replays `Idempotency-Key` requests)
 
-| Live Concurrency Playground (`30 Buyers -> 0 Oversells`) | OpenAPI `ProblemDetail` Schemas (`201` / `400` / `409`) | Live Paginated Catalog (`GET /api/v1/products`) |
-| :---: | :---: | :---: |
-| ![Ops Playground Burst](docs/screenshots/ops-playground-burst.png) | ![Swagger OpenAPI v2 ProblemDetail](docs/screenshots/swagger-openapi-v2.png) | ![Swagger Live Catalog Response](docs/screenshots/swagger-catalog-live.png) |
+| Live Ops Console (`30 Buyers -> 0 Oversells`) | OpenAPI `ProblemDetail` Schemas (`201` / `400` / `409` / `429`) |
+| :---: | :---: |
+| ![Ops Playground Burst](docs/screenshots/ops-playground-burst.png) | ![Swagger OpenAPI ProblemDetail](docs/screenshots/swagger-openapi-v2.png) |
 
 ---
 
@@ -187,19 +191,22 @@ Run the full unit, API integration, and multi-threaded concurrency test suite lo
 ./mvnw -B verify
 ```
 
-### Measured Verification Summary (`45` Tests Passing, `0` Failures, `0` Skipped)
+### Measured Verification Summary (`51` Tests Passing, `0` Failures, `0` Skipped, JaCoCo `89.61%` Instructions)
 
 | Test Suite | Tests | What It Verifies |
 | :--- | :---: | :--- |
 | `ApplicationContextIntegrationTest` | 2 | Full Spring context, Flyway `V1` schema on H2 PostgreSQL-mode, `ddl-auto: validate`, `/api/v1/health`, `/v3/api-docs` |
-| `ObservabilityIntegrationTest` | 5 | `CorrelationIdFilter` UUID generation/echo & MDC cleanup, `ProblemDetail.requestId` on `400`/`401`/`403`/`404`, live Micrometer counters at `/api/v1/metrics/summary`, `@ApiResponses` schemas in `/v3/api-docs`, and `GET /` playground HTML |
+| `ObservabilityIntegrationTest` | 5 | `CorrelationIdFilter` UUID generation/echo & MDC cleanup, `ProblemDetail.requestId` on `400`/`401`/`403`/`404`, live Micrometer counters at `/api/v1/metrics/summary`, `@ApiResponses` (`429` included) in `/v3/api-docs`, and `GET /` Ops Console `v2.1` HTML |
+| `FlashSaleRateLimitFilterTest`, `RateLimitIntegrationTest` | 4 | Per-actor token-bucket refill via `Clock`, `X-Forwarded-For` IP fallback, `429 Too Many Requests` (`Retry-After`, `X-RateLimit-*`, `ProblemDetail.requestId`), actor isolation, and `rateLimitRejected` Micrometer delta |
 | `GlobalExceptionHandlerTest` | 3 | RFC 7807 `ProblemDetail` payloads with `requestId` for domain conflicts, validation field errors, and missing headers |
 | `DevDataSeederTest` | 2 | Idempotent dev seeding on empty DB and skip behavior when users already exist |
 | `JwtServiceTest`, `AuthServiceTest`, `AuthIntegrationTest` | 12 | JWT generation/expiry via `Clock`, refresh rotation, token-family revocation on reuse, logout, `401`/`403` RBAC |
 | `CatalogServiceTest`, `CatalogIntegrationTest` | 6 | Pagination/filtering, duplicate SKU `409`, `@Version` optimistic lock guard, Caffeine Cache-Aside population & eviction |
 | `VoucherServiceTest`, `VoucherConcurrencyIntegrationTest` | 5 | Discount math, time-window guard, duplicate claim `409`, **30 concurrent threads claiming quota=5 -> 5 `201` & 25 `409`** |
 | `OrderServiceTest`, `OrderConcurrencyIntegrationTest` | 6 | `Idempotency-Key` replay & payload mismatch `409`, owner isolation `403`, confirm/cancel transitions, **50 concurrent threads buying 10 items -> 10 orders, 40 `409`, 0 oversells** |
-| `OrderExpiryServiceTest`, `OrderExpiryIntegrationTest` | 4 | Deterministic `Clock` TTL expiry without `Thread.sleep`, voucher restoration, concurrent confirm/expiry race safety, malformed JSON `400` |
+| `OrderExpiryServiceTest`, `OrderExpiryIntegrationTest` | 6 | Deterministic `Clock` TTL expiry without `Thread.sleep`, voucher restoration, concurrent confirm/expiry race safety, `POST /api/v1/admin/orders/expire-now` RBAC & immediate stock release, malformed JSON `400` |
+
+- **JaCoCo Coverage (`.\mvnw.cmd -B verify`, 84 classes):** **89.61%** Instructions (`5,158 / 5,756`, `>= 75%` build gate), **90.62%** Lines (`1,179 / 1,301`), **72.73%** Branches (`192 / 264`).
 
 ### Concurrent Load Benchmark ([`benchmarks/run_load_benchmark.py`](benchmarks/run_load_benchmark.py) & [`docs/BENCHMARK.md`](docs/BENCHMARK.md))
 
@@ -223,20 +230,20 @@ python benchmarks/run_load_benchmark.py --base-url http://127.0.0.1:8101 --reque
 src/
 ├── main/
 │   ├── java/com/portfolio/flashsale/
-│   │   ├── common/          # AppProperties, ClockConfig, CacheConfig, OpenApiConfig, SchedulerConfig, DevDataSeeder, GlobalExceptionHandler, HealthController, observability (CorrelationIdFilter, FlashSaleMetrics, MetricsController, ConsoleViewController)
+│   │   ├── common/          # AppProperties, ClockConfig, CacheConfig, OpenApiConfig, SchedulerConfig, DevDataSeeder, GlobalExceptionHandler, HealthController, ratelimit (FlashSaleRateLimitFilter, RateLimitProperties), observability (CorrelationIdFilter, FlashSaleMetrics, MetricsController, ConsoleViewController)
 │   │   ├── auth/            # User, RefreshToken, Role, JwtService, JwtAuthenticationFilter, SecurityConfig, SecurityProblemHandler, AuthService, AuthController
 │   │   ├── catalog/         # Product, ProductRepository (@EntityGraph), ProductSpecifications, CatalogService, ProductController, AdminProductController
 │   │   ├── inventory/       # InventoryItem (@Version), InventoryItemRepository (atomic reserve/confirm/release queries)
 │   │   ├── voucher/         # FlashVoucher, VoucherClaim, DiscountType, VoucherService, VoucherController, AdminVoucherController
-│   │   └── order/           # Order, OrderItem, IdempotencyRecord, OrderPlacementFacade, OrderService, OrderExpiryService, OrderExpiryScheduler, OrderController
+│   │   └── order/           # Order, OrderItem, IdempotencyRecord, OrderPlacementFacade, OrderService, OrderExpiryService, OrderExpiryScheduler, OrderController, AdminOrderController
 │   └── resources/
 │       ├── application.yml, application-dev.yml, application-test.yml, application-docker.yml
 │       ├── db/migration/V1__init_schema.sql
-│       └── static/index.html # Dark-slate Interactive Concurrency & Idempotency Playground (GET /)
+│       └── static/index.html # Dark-slate Interactive Ops Console v2.1 (GET /)
 ├── benchmarks/
 │   └── run_load_benchmark.py # Zero-dependency Python 3 multi-threaded contention benchmark
 └── test/
-    └── java/com/portfolio/flashsale/  # 15 unit, MockMvc integration, Clock TTL, observability, and CountDownLatch concurrency test suites
+    └── java/com/portfolio/flashsale/  # 17 unit, MockMvc integration, rate-limit, Clock TTL, observability, and CountDownLatch concurrency test suites
 ```
 
 ---
