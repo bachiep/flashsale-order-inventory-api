@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: flashsale-order-inventory-api
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: dev
+      - key: APP_SEED_ENABLED
+        value: "true"
+      - key: JWT_SECRET
+        generateValue: true
