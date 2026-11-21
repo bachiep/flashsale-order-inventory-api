@@ -191,11 +191,12 @@ Run the full unit, API integration, and multi-threaded concurrency test suite lo
 ./mvnw -B verify
 ```
 
-### Measured Verification Summary (`51` Tests Passing, `0` Failures, `0` Skipped, JaCoCo `89.61%` Instructions)
+### Measured Verification Summary (`55` Tests Passing, `0` Failures, `0` Skipped, JaCoCo `>= 89%` Instructions)
 
 | Test Suite | Tests | What It Verifies |
 | :--- | :---: | :--- |
 | `ApplicationContextIntegrationTest` | 2 | Full Spring context, Flyway `V1` schema on H2 PostgreSQL-mode, `ddl-auto: validate`, `/api/v1/health`, `/v3/api-docs` |
+| `ProductionSecurityGuardTest` | 4 | Fail-fast startup guard rejecting placeholder/short `JWT_SECRET` or default `DB_PASSWORD` under `prod`/`production` profiles |
 | `ObservabilityIntegrationTest` | 5 | `CorrelationIdFilter` UUID generation/echo & MDC cleanup, `ProblemDetail.requestId` on `400`/`401`/`403`/`404`, live Micrometer counters at `/api/v1/metrics/summary`, `@ApiResponses` (`429` included) in `/v3/api-docs`, and `GET /` Ops Console `v2.1` HTML |
 | `FlashSaleRateLimitFilterTest`, `RateLimitIntegrationTest` | 4 | Per-actor token-bucket refill via `Clock`, `X-Forwarded-For` IP fallback, `429 Too Many Requests` (`Retry-After`, `X-RateLimit-*`, `ProblemDetail.requestId`), actor isolation, and `rateLimitRejected` Micrometer delta |
 | `GlobalExceptionHandlerTest` | 3 | RFC 7807 `ProblemDetail` payloads with `requestId` for domain conflicts, validation field errors, and missing headers |
@@ -243,7 +244,7 @@ src/
 ├── benchmarks/
 │   └── run_load_benchmark.py # Zero-dependency Python 3 multi-threaded contention benchmark
 └── test/
-    └── java/com/portfolio/flashsale/  # 17 unit, MockMvc integration, rate-limit, Clock TTL, observability, and CountDownLatch concurrency test suites
+    └── java/com/portfolio/flashsale/  # 18 unit, MockMvc integration, security-guard, rate-limit, Clock TTL, observability, and CountDownLatch concurrency test suites
 ```
 
 ---
