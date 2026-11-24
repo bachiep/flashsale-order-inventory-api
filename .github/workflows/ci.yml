@@ -47,6 +47,15 @@ jobs:
           curl -fsS http://127.0.0.1:8101/api/v1/health | grep -q '"status":"UP"'
           curl -fsS http://127.0.0.1:8101/api/v1/products | grep -q '"items"'
 
+      - name: Run multi-threaded contention & idempotency benchmark on Postgres 16 + Redis 7
+        run: |
+          python3 benchmarks/run_load_benchmark.py \
+            --base-url http://127.0.0.1:8101 \
+            --requests 50 \
+            --workers 15 \
+            --stock 10 \
+            --voucher-quota 5
+
       - name: Tear down Compose stack
         if: always()
         run: |

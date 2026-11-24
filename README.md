@@ -211,7 +211,7 @@ Run the full unit, API integration, and multi-threaded concurrency test suite lo
 
 ### Concurrent Load Benchmark ([`benchmarks/run_load_benchmark.py`](benchmarks/run_load_benchmark.py) & [`docs/BENCHMARK.md`](docs/BENCHMARK.md))
 
-Measured locally with Python 3 (`urllib.request` + `ThreadPoolExecutor`) against the packaged Spring Boot `3.4.13` JAR on `http://127.0.0.1:8101`:
+Measured locally with Python 3 (`urllib.request` + `ThreadPoolExecutor`) against the packaged Spring Boot `3.4.13` JAR on `http://127.0.0.1:8101` (and executed live in CI `docker-smoke` against containerized PostgreSQL 16 + Redis 7 on every push and PR):
 
 ```bash
 python benchmarks/run_load_benchmark.py --base-url http://127.0.0.1:8101 --requests 100 --workers 25 --stock 15 --voucher-quota 10
